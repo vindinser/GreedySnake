@@ -1,11 +1,10 @@
 // 引入样式表
 import './style/index.less'
-// 引入类
-import Food from './moduls/Food'
-import ScorePanel from './moduls/ScorePanel'
-import Snake from './moduls/Snake'
+// 引入游戏控制类
+import GameControl from './moduls/GameControl'
 
-console.log('%cGreedySnake', 'color: red; font-size: 20px; font-weight: 600;');
+const gameControl = new GameControl
+setInterval(() => {
+  console.log(gameControl)
+}, 1000)
 
-const snake = new Snake
-console.log(snake)
