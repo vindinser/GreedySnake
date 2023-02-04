@@ -44,6 +44,30 @@ module.exports = {
           'ts-loader'
         ], // 要使用的loader
         exclude: /node-modules/ // 要排除的文件
+      },
+      { // 指定设置less文件的处理
+        test: /\.less$/, // 规则生效文件
+        use: [
+          "style-loader",
+          "css-loader",
+          // 引入postcss，解决浏览器兼容性问题
+          {
+            loader: "postcss-loader",
+            options: {
+              postcssOptions: {
+                plugins: [
+                  [
+                    "postcss-preset-env",
+                    {
+                      browsers: "last 2 versions" // 兼容两个最新的浏览器
+                    }
+                  ]
+                ]
+              }
+            }
+          },
+          "less-loader"
+        ]
       }
     ] // 指定加载规则
   },
