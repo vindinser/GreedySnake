@@ -10,7 +10,10 @@ class GameControl {
 
   // 存储移动方向
   snakeToDirection: string = '';
-  rightToDirection: Array<string> = [ 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'up', 'down', 'left', 'right' ];
+  rightToDirection: Array<string> = [ 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Up', 'Down', 'Left', 'Right' ];
+
+  // 记录游戏是否结束
+  snakeIsLive: Boolean = true;
 
   constructor() {
     this.snake = new Snake();
@@ -22,12 +25,46 @@ class GameControl {
   // 初始化游戏
   gameInit() {
     console.log('%cGreedySnake Begin!', 'color: red; font-size: 20px; font-weight: 600;');
-    document.addEventListener('keydown', this.keyDownHandler.bind(this))
+    // 监听键盘事件
+    document.addEventListener('keydown', this.keyDownHandler.bind(this));
+    // 使蛇开始移动
+    this.snakeRun()
   }
 
   // 键盘按下的响应函数
   keyDownHandler(event: KeyboardEvent) {
     this.rightToDirection.includes(event.key) && (this.snakeToDirection = event.key)
+  }
+
+  // 控制蛇头移动的方法
+  snakeRun() {
+    let X = this.snake.X;
+    let Y = this.snake.Y;
+
+    switch (this.snakeToDirection) {
+      case "ArrowUp":
+      case "Up":
+        Y -= 10;
+        break;
+      case "ArrowDown":
+      case "Down":
+        Y += 10;
+        break;
+      case "ArrowLeft":
+      case "Left":
+        X -= 10;
+        break;
+      case "ArrowRight":
+      case "Right":
+        X += 10;
+        break;
+      default:
+        console.log('%cWrong Direction!', 'color: red; font-size: 20px; font-weight: 600;')
+    }
+    this.snake.X = X;
+    this.snake.Y = Y;
+    // 定时调用使蛇移动
+    this.snakeIsLive && setTimeout(this.snakeRun.bind(this), 300 - (this.scorePanel.level - 1) * 30)
   }
 }
 
