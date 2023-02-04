@@ -24,12 +24,18 @@ class Snake {
 
   // 设置蛇头x轴坐标
   set X(val) {
-    this.snakeHeadEle.style.left = `${val}px`
+    if(val < 0 || val > 290) {
+      throw new Error('Game Over！')
+    }
+    this.X !== val && (this.snakeHeadEle.style.left = `${val}px`)
   }
 
   // 设置蛇头x轴坐标
   set Y(val) {
-    this.snakeHeadEle.style.top = `${val}px`
+    if(val < 0 || val > 290) {
+      throw new Error('Game Over！')
+    }
+    this.Y !== val && (this.snakeHeadEle.style.top = `${val}px`)
   }
 
   // 蛇增加长度

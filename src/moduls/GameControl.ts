@@ -61,10 +61,30 @@ class GameControl {
       default:
         console.log('%cWrong Direction!', 'color: red; font-size: 20px; font-weight: 600;')
     }
-    this.snake.X = X;
-    this.snake.Y = Y;
+
+    this.checkIsEating(X, Y);
+
+    try {
+      this.snake.X = X;
+      this.snake.Y = Y;
+    } catch (e) {
+      console.log(e)
+      // alert(e.message)
+      alert('Game Over!')
+      this.snakeIsLive = false
+    }
+
     // 定时调用使蛇移动
     this.snakeIsLive && setTimeout(this.snakeRun.bind(this), 300 - (this.scorePanel.level - 1) * 30)
+  }
+
+  // 蛇是否吃到了food
+  checkIsEating(X: number, Y: number) {
+    if(X === this.food.X && Y === this.food.Y) {
+      this.food.change();
+      this.scorePanel.addScore();
+      this.snake.addSnakeBody();
+    }
   }
 }
 
