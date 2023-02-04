@@ -13,8 +13,9 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'), // 指定打包目录
     filename: "bundle.js", // 打包后文件的文件名
     environment: {
-      arrowFunction: false
-    } // 不使用箭头函数
+      arrowFunction: false, // 不使用箭头函数
+      const: false // 不使用const 兼容IE 10
+    }
   },
   // 设置mode
   mode: 'development',
