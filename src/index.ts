@@ -1,37 +1,14 @@
 // 引入样式表
 import './style/index.less'
+// 引入类
+import Food from './moduls/Food'
+import ScorePanel from './moduls/ScorePanel'
 
 console.log('%cGreedySnake', 'color: red; font-size: 20px; font-weight: 600;');
 
-// 定义 被吃的蛇 类
-class Food {
-  element: HTMLElement; // 对应的元素
-
-  constructor() {
-    // 获取页面中的 food 并赋值
-    // 不一定有此元素， ! 表示一定有次元素
-    this.element = document.querySelector('.food')!;
-  }
-
-  // 获取food x轴坐标
-  get X() {
-    return this.element.offsetLeft;
-  }
-
-  // 获取food y轴坐标
-  get Y() {
-    return this.element.offsetTop;
-  }
-
-  // 修改food 位置
-  change() {
-    // 生成随机位置
-    const top = Math.round(Math.random() * 29) * 10,
-      left = Math.round(Math.random() * 29) * 10; // 0-290之间取整 10 的数
-
-    this.element.style.left = `${left}px`;
-    this.element.style.top = `${top}px`;
-  }
+const scorePanel = new ScorePanel();
+for(let i = 0; i < 200; i++) {
+  scorePanel.addScore()
 }
 
 const food = new Food()
