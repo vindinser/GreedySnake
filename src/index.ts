@@ -1,7 +1,6 @@
 // 引入样式表
 import './style/index.less'
-// 引入游戏控制类
-import GameControl from './moduls/GameControl'
+// 引入应用外壳
+import App from './moduls/App'
 
-const gameControl = new GameControl
-
+const app = new App

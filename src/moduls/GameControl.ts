@@ -9,6 +9,8 @@ const PLAYING = 2;
 const PAUSED = 3;
 
 class GameControl {
+  // 游戏挂载的容器，所有元素都在该容器内查找
+  root: HTMLElement;
   snake!: Snake;
   food!: Food;
   scorePanel!: ScorePanel;
@@ -32,18 +34,24 @@ class GameControl {
   ledLight!: HTMLElement;
   standbyClock!: HTMLElement;
   clockTimer: any = null;
+  // 蛇移动的定时器
+  runTimer: any = null;
+  // 绑定的键盘事件处理函数，销毁游戏时解绑
+  keyHandler: (event: KeyboardEvent) => void;
 
-  constructor() {
-    this.gameOverEle = document.getElementById('gameOver')!;
-    this.finalScoreEle = document.getElementById('finalScore')!;
-    this.restartBtn = document.getElementById('restartBtn')!;
-    this.powerBtn = document.getElementById('powerBtn')!;
-    this.startBtn = document.getElementById('startBtn')!;
-    this.standbyOverlay = document.getElementById('standbyOverlay')!;
-    this.readyOverlay = document.getElementById('readyOverlay')!;
-    this.pauseOverlay = document.getElementById('pauseOverlay')!;
-    this.ledLight = document.getElementById('ledLight')!;
-    this.standbyClock = document.getElementById('standbyClock')!;
+  constructor(root: HTMLElement) {
+    this.root = root;
+    this.keyHandler = this.keyDownHandler.bind(this);
+    this.gameOverEle = this.root.querySelector('#gameOver')!;
+    this.finalScoreEle = this.root.querySelector('#finalScore')!;
+    this.restartBtn = this.root.querySelector('#restartBtn')!;
+    this.powerBtn = this.root.querySelector('#powerBtn')!;
+    this.startBtn = this.root.querySelector('#startBtn')!;
+    this.standbyOverlay = this.root.querySelector('#standbyOverlay')!;
+    this.readyOverlay = this.root.querySelector('#readyOverlay')!;
+    this.pauseOverlay = this.root.querySelector('#pauseOverlay')!;
+    this.ledLight = this.root.querySelector('#ledLight')!;
+    this.standbyClock = this.root.querySelector('#standbyClock')!;
     this.gameInit()
   }
 
@@ -54,7 +62,7 @@ class GameControl {
     this.initRestart();
     this.initVirtualControls();
     this.initTouchControls();
-    document.addEventListener('keydown', this.keyDownHandler.bind(this));
+    document.addEventListener('keydown', this.keyHandler);
     this.updateClock();
     this.clockTimer = setInterval(() => this.updateClock(), 1000);
   }
@@ -101,11 +109,11 @@ class GameControl {
     // 重置分数
     this.scorePanel && (this.scorePanel.score = 0);
     this.scorePanel && (this.scorePanel.level = 1);
-    document.getElementById('score')!.innerHTML = '0';
-    document.getElementById('level')!.innerHTML = '1';
+    this.root.querySelector('#score')!.innerHTML = '0';
+    this.root.querySelector('#level')!.innerHTML = '1';
 
     // 重置蛇
-    const snakeBody = document.querySelector('.snake');
+    const snakeBody = this.root.querySelector('.snake');
     if (snakeBody) snakeBody.innerHTML = '<div></div>';
   }
 
@@ -140,9 +148,9 @@ class GameControl {
     this.snakeToDirection = '';
     this.startBtn.textContent = 'PAUSE';
 
-    this.snake = new Snake();
-    this.food = new Food();
-    this.scorePanel = new ScorePanel();
+    this.snake = new Snake(this.root);
+    this.food = new Food(this.root);
+    this.scorePanel = new ScorePanel(this.root);
     this.snakeRun();
   }
 
@@ -187,11 +195,11 @@ class GameControl {
     this.pauseOverlay.classList.remove('show');
     this.startBtn.textContent = 'PAUSE';
 
-    const snakeBody = document.querySelector('.snake')!;
+    const snakeBody = this.root.querySelector('.snake')!;
     snakeBody.innerHTML = '<div></div>';
 
-    this.snake = new Snake();
-    this.food = new Food();
+    this.snake = new Snake(this.root);
+    this.food = new Food(this.root);
     this.food.change();
 
     this.snakeRun();
@@ -201,6 +209,14 @@ class GameControl {
     this.finalScoreEle.innerHTML = String(this.scorePanel.score);
     this.gameOverEle.classList.add('show');
     this.startBtn.textContent = 'START';
+  }
+
+  // ========== 销毁游戏（离开游戏时调用） ==========
+  destroy() {
+    this.snakeIsLive = false;
+    clearTimeout(this.runTimer);
+    clearInterval(this.clockTimer);
+    document.removeEventListener('keydown', this.keyHandler);
   }
 
   // ========== 待机时钟 ==========
@@ -270,7 +286,7 @@ class GameControl {
 
   // ========== 触摸滑动 ==========
   initTouchControls() {
-    const stage = document.querySelector('.stage');
+    const stage = this.root.querySelector('.stage');
     if (!stage) return;
 
     let startX = 0;
@@ -378,7 +394,7 @@ class GameControl {
       this.snakeIsLive = false
     }
 
-    this.snakeIsLive && setTimeout(this.snakeRun.bind(this), this.getSpeed())
+    this.snakeIsLive && (this.runTimer = setTimeout(this.snakeRun.bind(this), this.getSpeed()))
   }
 
   checkIsEating(X: number, Y: number) {

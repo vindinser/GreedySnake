@@ -12,9 +12,9 @@ class ScorePanel {
   // 多少分升级
   upScore: number;
 
-  constructor(maxLevel: number = 10, upScore: number = 10) {
-    this.scoreEle = document.querySelector('#score')!;
-    this.levelEle = document.querySelector('#level')!;
+  constructor(root: ParentNode = document, maxLevel: number = 10, upScore: number = 10) {
+    this.scoreEle = root.querySelector<HTMLElement>('#score')!;
+    this.levelEle = root.querySelector<HTMLElement>('#level')!;
     this.maxLevel = maxLevel;
     this.upScore = upScore;
   }

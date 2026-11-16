@@ -2,10 +2,10 @@
 class Food {
   element: HTMLElement; // 对应的元素
 
-  constructor() {
+  constructor(root: ParentNode = document) {
     // 获取页面中的 food 并赋值
     // 不一定有此元素， ! 表示一定有次元素
-    this.element = document.querySelector('.food')!;
+    this.element = root.querySelector<HTMLElement>('.food')!;
   }
 
   // 获取food x轴坐标

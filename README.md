@@ -1,6 +1,7 @@
-# GreedySnake 贪吃蛇
+# GreedySnake 游戏合集
 
-基于 TypeScript + Webpack 实现的贪吃蛇网页游戏，采用复古游戏机外观设计，支持电脑键盘和手机触屏操控。
+基于 TypeScript + Webpack 实现的小游戏合集网页应用，采用复古游戏机外观设计，支持电脑键盘和手机触屏操控。
+目前收录 **贪吃蛇**，游戏注册表已预留扩展位，后续可继续添加其他小游戏。
 
 ## [在线体验](http://greedysnake.zsawxotof.site/)
 
@@ -19,10 +20,21 @@ npm run build
 
 打包产物输出到 `dist/` 目录。
 
+## 页面结构
+
+应用分为两个视图，通过 `.show` 类切换：
+
+| 视图 | 说明 |
+|------|------|
+| **主页** `#homeView` | 游戏选择页，列出注册表中的所有游戏卡片，点击卡片进入对应游戏 |
+| **游戏视图** `#gameView` | 顶部为标题条（含 `◀ MENU` 返回主页按钮），下方为游戏内容 |
+
 ## 操作方式
 
 | 操作 | 电脑 | 手机 |
 |------|------|------|
+| 选择游戏 | 在主页点击游戏卡片 | 同左 |
+| 返回主页 | 点击 **◀ MENU** | 同左 |
 | 开始游戏 | 按 **START** 键 或 任意方向键 | 点击 **START** 按钮 |
 | 控制方向 | 方向键 ↑↓←→ | 点击十字方向键 / 在屏幕上滑动 |
 | 加速 | 空格键 / 点击 **A** 按钮 | 点击 **A** 按钮 |
@@ -46,6 +58,7 @@ npm run build
 - 每 10 分升一级，最高等级 10 级
 - 等级越高蛇移动越快（速度公式：`300 - (等级-1) × 30` ms）
 - 撞墙或撞到自身则 Game Over
+- 开局蛇头位于网格中心 (150,150)，初始方向向右，四个方向都有空间，不会一开局就撞墙
 
 ## 技术栈
 
@@ -58,16 +71,49 @@ npm run build
 
 ```
 src/
-├── index.html          # HTML 模板
+├── index.html          # HTML 模板（主页 + 游戏视图两个容器）
 ├── index.ts            # 入口文件
 ├── moduls/             # 游戏模块（注意：目录名拼写如此）
-│   ├── GameControl.ts  # 游戏控制器（状态机、输入处理）
+│   ├── App.ts          # 应用外壳（主页渲染、视图切换、游戏挂载/销毁）
+│   ├── GameControl.ts  # 贪吃蛇控制器（状态机、输入处理）
 │   ├── Snake.ts        # 蛇（移动、碰撞检测）
 │   ├── Food.ts         # 食物（随机生成）
 │   └── ScorePanel.ts   # 计分板（分数、等级）
+├── games/              # 游戏注册表（新增小游戏的扩展点）
+│   ├── types.ts        # GameModule / GameInstance 接口定义
+│   ├── index.ts        # 游戏清单，追加一项即可上线一款新游戏
+│   └── snake/          # 贪吃蛇游戏模块
+│       ├── index.ts    # 挂载逻辑与图标
+│       └── template.ts # 游戏机外壳 HTML 模板
 └── style/
-    └── index.less      # 全部样式（游戏机外观、响应式适配）
+    └── index.less      # 全部样式（主页、游戏机外观、响应式适配）
 ```
+
+## 新增一款小游戏
+
+1. 新建 `src/games/<id>/index.ts`，导出一个 `GameModule`：
+
+   ```ts
+   const myGame: GameModule = {
+     id: 'my-game',
+     name: '我的游戏',
+     title: 'MY GAME',
+     description: '一句话简介',
+     icon: '<svg>...</svg>',       // 主页卡片图标
+     mount(container: HTMLElement) {
+       container.innerHTML = '<div class="my-game"></div>'
+       return {
+         destroy() {
+           // 清理定时器、事件监听
+         }
+       }
+     }
+   }
+   ```
+
+2. 在 `src/games/index.ts` 中登记：`const games: GameModule[] = [snake, myGame]`
+
+3. 主页卡片、游戏标题条、返回主页逻辑都由 `App` 自动处理，无需改动外壳代码。
 
 ## 作者
 

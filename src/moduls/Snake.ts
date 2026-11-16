@@ -7,9 +7,9 @@ class Snake {
   // 蛇的容器
   snakeAllEle: HTMLElement;
 
-  constructor() {
-    this.snakeAllEle = document.querySelector('.snake')!
-    this.snakeHeadEle = document.querySelector('.snake > div') as HTMLElement;
+  constructor(root: ParentNode = document) {
+    this.snakeAllEle = root.querySelector<HTMLElement>('.snake')!
+    this.snakeHeadEle = root.querySelector<HTMLElement>('.snake > div')!;
     this.snakeBodyEle = this.snakeAllEle.getElementsByTagName('div');
   }
 
