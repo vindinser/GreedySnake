@@ -113,8 +113,7 @@ class GameControl {
     this.root.querySelector('#level')!.innerHTML = '1';
 
     // 重置蛇
-    const snakeBody = this.root.querySelector('.snake');
-    if (snakeBody) snakeBody.innerHTML = '<div></div>';
+    this.resetSnake();
   }
 
   // ========== START / PAUSE 按钮 ==========
@@ -145,13 +144,22 @@ class GameControl {
     this.gameState = PLAYING;
     this.readyOverlay.classList.remove('show');
     this.snakeIsLive = true;
-    this.snakeToDirection = '';
+    this.snakeToDirection = 'ArrowRight';
     this.startBtn.textContent = 'PAUSE';
 
-    this.snake = new Snake(this.root);
+    this.resetSnake();
     this.food = new Food(this.root);
     this.scorePanel = new ScorePanel(this.root);
     this.snakeRun();
+  }
+
+  // 重置蛇：蛇头回到网格中心
+  resetSnake() {
+    if (!this.snake) {
+      this.snake = new Snake(this.root);
+      return;
+    }
+    this.snake.reset();
   }
 
   pause() {
@@ -185,7 +193,7 @@ class GameControl {
   restart() {
     this.gameState = PLAYING;
     this.snakeIsLive = true;
-    this.snakeToDirection = '';
+    this.snakeToDirection = 'ArrowRight';
     this.isFast = false;
     this.scorePanel.score = 0;
     this.scorePanel.level = 1;
@@ -195,10 +203,7 @@ class GameControl {
     this.pauseOverlay.classList.remove('show');
     this.startBtn.textContent = 'PAUSE';
 
-    const snakeBody = this.root.querySelector('.snake')!;
-    snakeBody.innerHTML = '<div></div>';
-
-    this.snake = new Snake(this.root);
+    this.resetSnake();
     this.food = new Food(this.root);
     this.food.change();
 

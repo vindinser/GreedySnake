@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Browser mini-game collection (currently: Greedy Snake) — TypeScript + webpack, no backend, no framework. DOM manipulation via `document.querySelector` and `offsetLeft/offsetTop`.
+Browser mini-game collection (currently: Greedy Snake, 游龙52式) — TypeScript + webpack, no backend, no framework. DOM manipulation via `document.querySelector` and `offsetLeft/offsetTop`.
 
 ## Quick Start
 
@@ -28,6 +28,11 @@ Two views live in `src/index.html` and are toggled by the `show` class: the home
 | `src/games/index.ts` | Game registry — add a game by appending one entry here |
 | `src/games/snake/index.ts` | Snake game module: injects the console template, owns the `GameControl` lifecycle |
 | `src/games/snake/template.ts` | Snake console HTML template |
+| `src/games/dragon52/index.ts` | 游龙52式 game module: injects the card template, toggles the `theme-pink` body class |
+| `src/games/dragon52/cards.ts` | 52 card definitions (4 suits × 13 ranks), special-event table |
+| `src/games/dragon52/Dragon52.ts` | 游龙52式 controller: shuffle, draw, special events, scoring, deck track |
+| `src/games/dragon52/template.ts` | 游龙52式 HTML template |
+| `src/games/dragon52/style.less` | 游龙52式 styles (imported by the module, pink theme) |
 | `src/moduls/App.ts` | App shell: home page rendering, view switching, game mount/destroy |
 
 Four classes in `src/moduls/` (note: directory is misspelled as "moduls"):
@@ -46,6 +51,7 @@ Four classes in `src/moduls/` (note: directory is misspelled as "moduls"):
 1. Create `src/games/<id>/index.ts` exporting a `GameModule` (`id`, `name`, `title`, `description`, `icon`, `mount(container)`).
 2. `mount()` must render its own DOM into `container` and return `{ destroy() }` that clears timers and listeners.
 3. Register it in `src/games/index.ts`.
+4. A game may own its own `.less` (import it from the module) and may set a `theme-*` class on `document.body` — remove it in `destroy()`.
 
 ## Key Implementation Details
 
@@ -54,7 +60,7 @@ Four classes in `src/moduls/` (note: directory is misspelled as "moduls"):
 - **Level-up**: Every 10 points. Max level 10.
 - **Collision**: Throws `Error` on wall hit or self-collision. Caught in `GameControl.snakeRun()`.
 - **Snake body**: New segments added via `insertAdjacentHTML('beforeend', '<div></div>')`.
-- **Snake start**: The head has no inline `left/top`, so it starts at (0, 0) — moving up/left first is an instant wall hit.
+- **Snake start**: The head spawns at the grid center (150,150) with an initial direction of `ArrowRight`, so the first input can never be an instant wall hit. `Snake.reset()` re-centers it (start / restart / power-off).
 
 ## Toolchain
 

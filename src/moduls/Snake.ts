@@ -1,3 +1,7 @@
+// 蛇头初始位置：网格中心，四周都有空间，不会一开局就撞墙
+const START_X = 150;
+const START_Y = 150;
+
 // 蛇
 class Snake {
   // 蛇元素(蛇头)
@@ -11,6 +15,15 @@ class Snake {
     this.snakeAllEle = root.querySelector<HTMLElement>('.snake')!
     this.snakeHeadEle = root.querySelector<HTMLElement>('.snake > div')!;
     this.snakeBodyEle = this.snakeAllEle.getElementsByTagName('div');
+    this.reset();
+  }
+
+  // 重置蛇：清空身体，蛇头回到网格中心
+  reset() {
+    this.snakeAllEle.innerHTML = '<div></div>';
+    this.snakeHeadEle = this.snakeAllEle.firstElementChild as HTMLElement;
+    this.snakeHeadEle.style.left = `${START_X}px`;
+    this.snakeHeadEle.style.top = `${START_Y}px`;
   }
 
   // 获取蛇头x轴的坐标
@@ -66,6 +79,10 @@ class Snake {
   // 蛇增加长度
   addSnakeBody() {
     this.snakeAllEle.insertAdjacentHTML('beforeend', '<div></div>')
+    // 新增的身体紧跟蛇头，避免默认出现在左上角
+    const lastEle = this.snakeAllEle.lastElementChild as HTMLElement;
+    lastEle.style.left = `${this.snakeHeadEle.offsetLeft}px`;
+    lastEle.style.top = `${this.snakeHeadEle.offsetTop}px`;
   }
 
   // 身体移动

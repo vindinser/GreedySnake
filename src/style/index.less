@@ -21,9 +21,15 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow: hidden;
+  overflow: auto;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+
+  // 用 auto 外边距居中：内容高于视口时可以正常滚动，不会被裁掉顶部
+  .home,
+  .app-game {
+    margin: auto;
+  }
 }
 
 // ===== 应用外壳：主页（游戏选择） =====
@@ -231,6 +237,28 @@ body {
 .game-content {
   display: flex;
   justify-content: center;
+}
+
+// ===== 粉色主题（游龙52式） =====
+// 游戏模块在挂载时给 body 加 .theme-pink，退出时移除
+body.theme-pink {
+  background: linear-gradient(135deg, #2b0716 0%, #4d0f28 50%, #7a1236 100%);
+
+  .game-bar {
+    background: linear-gradient(180deg, #ff7aa2 0%, #d81e5b 100%);
+    border-color: #ff9ec0;
+  }
+
+  .back-btn {
+    color: #5c0a26;
+    background: linear-gradient(180deg, #ffd0dd 0%, #ff6f9c 100%);
+    border-color: #ffe3ea;
+  }
+
+  .game-bar-title {
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+  }
 }
 
 // 游戏机外壳
@@ -840,6 +868,12 @@ body {
     overflow: auto;
     flex-direction: column;
     align-items: stretch;
+    justify-content: flex-start;
+
+    .home,
+    .app-game {
+      margin: 0;
+    }
   }
 
   // 主页占满屏幕

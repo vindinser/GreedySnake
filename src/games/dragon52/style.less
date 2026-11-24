@@ -1,0 +1,529 @@
+// 游龙52式：粉色主题样式
+@pink-bright: #ff6f9c;
+@pink: #ff4d6d;
+@pink-deep: #c9184a;
+@wine: #6b0f33;
+@wine-dark: #4a0a24;
+@cream: #fff5f7;
+@pink-light: #ffd0dd;
+
+// 游戏面板
+.dragon {
+  width: 440px;
+  max-width: 100%;
+  position: relative;
+  padding: 16px 18px 18px;
+  border-radius: 30px;
+  background: linear-gradient(180deg, @pink-bright 0%, @pink-deep 16%, @wine 55%, @wine-dark 100%);
+  box-shadow:
+    0 0 0 3px @pink-light,
+    0 0 0 6px @wine,
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  user-select: none;
+}
+
+// 顶部
+.dragon-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 8px 10px;
+
+  .brand {
+    color: #fff;
+    letter-spacing: 8px;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+  }
+}
+
+// 标题
+.dragon-title {
+  text-align: center;
+  color: #fff;
+  font-size: 30px;
+  letter-spacing: 10px;
+  text-indent: 10px;
+  text-shadow:
+    0 2px 0 #8c0f3c,
+    0 0 14px rgba(255, 255, 255, 0.55),
+    0 0 34px rgba(255, 77, 109, 0.8);
+}
+
+.dragon-sub {
+  text-align: center;
+  color: @pink-light;
+  font-size: 12px;
+  letter-spacing: 3px;
+  margin: 4px 0 12px;
+}
+
+// ========== 比分 ==========
+.score-board {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.player-box {
+  flex: 1;
+  padding: 8px 10px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.28);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  transition: all 0.25s;
+
+  &.active {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: #fff;
+    box-shadow: 0 0 16px rgba(255, 255, 255, 0.45);
+  }
+}
+
+.player-name {
+  color: @pink-light;
+  font-size: 12px;
+  letter-spacing: 3px;
+}
+
+.player-score {
+  color: #fff;
+  font-size: 26px;
+  line-height: 1.2;
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
+}
+
+.player-draws {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+.score-vs {
+  align-self: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  letter-spacing: 2px;
+}
+
+// ========== 特殊事件 ==========
+.event-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  margin: 10px 0 0;
+  border-radius: 12px;
+  background: linear-gradient(90deg, @pink, @pink-bright, @pink);
+  box-shadow: 0 0 22px rgba(255, 111, 156, 0.7);
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: all 0.3s ease;
+  overflow: hidden;
+
+  &.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.event-name {
+  color: #fff;
+  font-size: 16px;
+  letter-spacing: 4px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.event-desc {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 10px;
+  letter-spacing: 1px;
+  margin-top: 2px;
+}
+
+// ========== 牌面 ==========
+.card-area {
+  padding: 10px 0 12px;
+}
+
+.card {
+  width: 244px;
+  height: 292px;
+  margin: 0 auto;
+  perspective: 1000px;
+
+  &.flipped .card-inner {
+    transform: rotateY(180deg);
+  }
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.6s ease;
+}
+
+.card-face {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 16px;
+  backface-visibility: hidden;
+  overflow: hidden;
+}
+
+// 牌背
+.card-back {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: repeating-linear-gradient(45deg, #ff85ab 0 10px, #ff5c88 10px 20px);
+  border: 4px solid #fff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    border-radius: 10px;
+  }
+}
+
+.card-back-number {
+  color: #fff;
+  font-size: 56px;
+  letter-spacing: 4px;
+  text-shadow: 0 3px 0 rgba(0, 0, 0, 0.25);
+}
+
+.card-back-text {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+  letter-spacing: 3px;
+  margin-top: 8px;
+}
+
+// 牌面
+.card-front {
+  transform: rotateY(180deg);
+  padding: 14px 18px 16px;
+  text-align: center;
+  background: linear-gradient(180deg, #fffdfe 0%, @cream 100%);
+  color: @wine;
+  border: 4px solid #fff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+}
+
+.card-corner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-suit {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.card-rank {
+  font-size: 20px;
+}
+
+.card-number {
+  margin-top: 2px;
+  font-size: 46px;
+  line-height: 1;
+  color: @pink-deep;
+  text-shadow: 0 2px 0 rgba(255, 77, 109, 0.2);
+}
+
+.card-type {
+  margin-top: 4px;
+  font-size: 14px;
+  letter-spacing: 4px;
+  color: @pink-deep;
+}
+
+.card-task {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #4a0a24;
+}
+
+.card-hint {
+  font-size: 11px;
+  letter-spacing: 1px;
+  line-height: 1.6;
+  color: #b0305c;
+}
+
+.card-extra {
+  color: @pink-deep;
+}
+
+// 按花色区分花色符号与类型的颜色
+.card[data-suit="heart"] {
+  .card-suit, .card-type { color: #ff2d55; }
+}
+.card[data-suit="spade"] {
+  .card-suit, .card-type { color: #3d0820; }
+}
+.card[data-suit="club"] {
+  .card-suit, .card-type { color: #c9184a; }
+}
+.card[data-suit="diamond"] {
+  .card-suit, .card-type { color: #ff85ab; }
+}
+
+// ========== 操作 ==========
+.draw-btn {
+  display: block;
+  width: 100%;
+  padding: 12px 0;
+  font-family: inherit;
+  font-size: 19px;
+  font-weight: bold;
+  letter-spacing: 10px;
+  text-indent: 10px;
+  color: #fff;
+  background: linear-gradient(180deg, #ff8fab 0%, @pink 45%, @pink-deep 100%);
+  border: 3px solid #fff;
+  border-radius: 14px;
+  cursor: pointer;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
+  box-shadow:
+    0 6px 0 #8c0f3c,
+    0 10px 22px rgba(0, 0, 0, 0.45);
+  transition: transform 0.08s, box-shadow 0.08s;
+
+  &:active {
+    transform: translateY(4px);
+    box-shadow:
+      0 2px 0 #8c0f3c,
+      0 4px 12px rgba(0, 0, 0, 0.45);
+  }
+}
+
+.reshuffle-btn {
+  display: block;
+  margin: 12px auto 0;
+  padding: 6px 18px;
+  font-family: inherit;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(0, 0, 0, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 12px;
+  cursor: pointer;
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+// ========== 牌堆轨道 ==========
+.track {
+  margin-top: 12px;
+  padding: 8px 10px 10px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 12px;
+}
+
+.track-head {
+  display: flex;
+  justify-content: space-between;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 10px;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+
+.track-grid {
+  display: grid;
+  grid-template-columns: repeat(13, 1fr);
+  gap: 3px;
+}
+
+.track-cell {
+  height: 15px;
+  line-height: 15px;
+  text-align: center;
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 3px;
+
+  &.suit-heart { background: rgba(255, 77, 109, 0.6); }
+  &.suit-spade { background: rgba(61, 8, 32, 0.6); }
+  &.suit-club { background: rgba(255, 143, 171, 0.5); }
+  &.suit-diamond { background: rgba(255, 209, 221, 0.4); color: #7a1030; }
+
+  &.done {
+    opacity: 0.25;
+  }
+
+  &.current {
+    opacity: 1;
+    box-shadow: 0 0 0 2px #fff, 0 0 10px rgba(255, 255, 255, 0.9);
+  }
+}
+
+// ========== 回合提示 ==========
+.turn-hint {
+  margin-top: 10px;
+  text-align: center;
+  color: #fff;
+  font-size: 13px;
+  letter-spacing: 3px;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+// ========== 结束覆盖层 ==========
+.dragon-over {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 30px;
+  background: rgba(40, 4, 18, 0.92);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+
+  &.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.dragon-over-title {
+  color: #fff;
+  font-size: 34px;
+  line-height: 1.2;
+  letter-spacing: 8px;
+  text-align: center;
+  text-shadow: 0 0 14px rgba(255, 111, 156, 0.9);
+}
+
+.dragon-over-score {
+  margin: 16px 0 22px;
+  color: #fff;
+  font-size: 30px;
+  letter-spacing: 2px;
+
+  .final-name {
+    font-size: 14px;
+    color: @pink-light;
+  }
+
+  .final-colon {
+    color: @pink;
+    margin: 0 8px;
+  }
+}
+
+.again-btn {
+  padding: 12px 34px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 4px;
+  color: #fff;
+  background: linear-gradient(180deg, #ff8fab 0%, @pink 50%, @pink-deep 100%);
+  border: 2px solid #fff;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 5px 0 #8c0f3c;
+
+  &:active {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 #8c0f3c;
+  }
+}
+
+// ========== 手机适配 ==========
+@media (max-width: 480px) {
+  .dragon {
+    width: 100%;
+    min-height: 100%;
+    flex: 1;
+    border-radius: 0;
+    padding: 10px 10px 12px;
+    box-shadow: none;
+  }
+
+  .dragon-title {
+    font-size: 24px;
+    letter-spacing: 8px;
+  }
+
+  .dragon-sub {
+    margin: 3px 0 10px;
+  }
+
+  .card {
+    width: 208px;
+    height: 246px;
+  }
+
+  .card-number {
+    font-size: 38px;
+  }
+
+  .card-task {
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 6px 0;
+  }
+
+  .card-type {
+    font-size: 13px;
+  }
+
+  .card-back-number {
+    font-size: 40px;
+  }
+
+  .player-score {
+    font-size: 24px;
+  }
+
+  .draw-btn {
+    font-size: 17px;
+    padding: 11px 0;
+  }
+
+  .track {
+    margin-top: 10px;
+  }
+
+  .turn-hint {
+    margin-top: 8px;
+    font-size: 12px;
+  }
+}
