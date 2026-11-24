@@ -15,10 +15,21 @@ npm run dev
 ## 构建部署
 
 ```bash
-npm run build
+npm run build        # 开发构建
+npm run build:prod   # 生产构建（压缩 + 文件名哈希）
 ```
 
 打包产物输出到 `dist/` 目录。
+
+## 开发命令
+
+| 命令 | 说明 |
+|------|------|
+| `npm run dev` | 启动 webpack-dev-server，访问 http://localhost:8080 |
+| `npm run build` | 开发构建到 `dist/` |
+| `npm run build:prod` | 生产构建到 `dist/`（压缩 + 哈希文件名，产物在 `dist/js/`） |
+| `npm run typecheck` | `tsc --noEmit` 类型检查 |
+| `npm test` | 测试（暂未配置测试框架） |
 
 ## 页面结构
 
@@ -65,7 +76,8 @@ npm run build
 - **语言**：TypeScript（严格模式）
 - **构建**：Webpack 5 + Babel + ts-loader
 - **样式**：Less + PostCSS
-- **兼容性**：IE 10+（Webpack 输出无箭头函数和 const）
+- **兼容性**：现代浏览器（Chrome 108+）。Webpack 运行时虽降级为 ES5，但业务代码按现代浏览器转译，**不再支持 IE 10**
+- **代码分割**：动态 `import()` 会被切成独立 chunk，第三方库按需下载，不进首屏主包
 
 ## 项目结构
 
@@ -121,6 +133,26 @@ src/
 
 3. 主页卡片、游戏标题条、返回主页逻辑都由 `App` 自动处理，无需改动外壳代码。
 4. 需要独立主题时，可在模块内 `import './style.less'`，并在 `mount` 时给 `document.body` 加 `theme-xxx` 类、`destroy` 时移除（参考 `games/dragon52`）。
+
+### 引入第三方库
+
+第三方库**不能**在 `index.ts` 里静态引入 —— `index.ts` 属于主包，静态引入会让所有访客都下载这个库。正确做法是用动态 `import()` 单独放在 `runtime.ts` 里：
+
+```ts
+// src/games/<id>/runtime.ts
+export async function createGame(container: HTMLElement) {
+  const THREE = await import(/* webpackChunkName: "three" */ 'three')
+  return new Game(container, THREE)
+}
+
+// src/games/<id>/Game.ts
+import type * as THREE_NS from 'three'   // 类型导入，编译期擦除，不产生运行时依赖
+export class Game {
+  constructor(container: HTMLElement, THREE: typeof THREE_NS) { /* ... */ }
+}
+```
+
+`import type` 不产生运行时依赖；`import()` 会被 webpack 切成独立 chunk 落到 `dist/js/`。用 `webpackChunkName` 给 chunk 命名，产物目录才可读。
 
 ## 收录游戏
 

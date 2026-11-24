@@ -8,11 +8,13 @@ Browser mini-game collection (currently: Greedy Snake, 游龙52式) — TypeScri
 
 ```bash
 npm install
-npm run dev       # webpack-dev-server on localhost:8080
-npm run build     # production build to dist/
+npm run dev        # webpack-dev-server on localhost:8080
+npm run build      # development build to dist/
+npm run build:prod # production build to dist/ (minified, hashed filenames)
+npm run typecheck  # tsc --noEmit
 ```
 
-No test framework is configured. No lint or typecheck commands exist (`npx tsc --noEmit` works).
+No test framework is configured yet. `npm run typecheck` runs the type checker.
 
 ## Architecture
 
@@ -53,6 +55,26 @@ Four classes in `src/moduls/` (note: directory is misspelled as "moduls"):
 3. Register it in `src/games/index.ts`.
 4. A game may own its own `.less` (import it from the module) and may set a `theme-*` class on `document.body` — remove it in `destroy()`.
 
+### Loading a third-party library
+
+Third-party libraries must never be statically imported from `index.ts` — `index.ts` is in the main bundle, so a static import would ship the library to every visitor of the home page. Load them through a dynamic `import()` in a separate module:
+
+```ts
+// src/games/<id>/runtime.ts
+export async function createGame(container: HTMLElement) {
+  const THREE = await import(/* webpackChunkName: "three" */ 'three')
+  return new Game(container, THREE)
+}
+
+// src/games/<id>/Game.ts
+import type * as THREE_NS from 'three'   // type-only import, erased at compile time
+export class Game {
+  constructor(container: HTMLElement, THREE: typeof THREE_NS) { /* ... */ }
+}
+```
+
+`import type` produces no runtime dependency; `import()` is split into its own chunk under `dist/js/`. Give the chunk a name via the `webpackChunkName` magic comment so the output stays readable.
+
 ## Key Implementation Details
 
 - **Grid system**: 10px increments. Stage is 304x304px, playable area is 30x30 cells (0–290px range).
@@ -64,10 +86,11 @@ Four classes in `src/moduls/` (note: directory is misspelled as "moduls"):
 
 ## Toolchain
 
-- TypeScript 4.9, strict mode, ES2015 target/module, `moduleResolution: node` (matches webpack's directory-index resolution)
-- Webpack 5 with babel-loader → ts-loader chain
+- TypeScript 4.9, strict mode, ES2015 target, `module: ESNext`, `moduleResolution: node` (matches webpack's directory-index resolution). `ESNext` module is required for dynamic `import()` — TS 4.9 rejects it under `module: ES2015` (TS1323)
+- Webpack 5 with babel-loader → ts-loader chain; `node_modules` is excluded from babel, so third-party code is not rewritten by core-js
 - Less for styles, PostCSS with `postcss-preset-env` for browser compat
-- Webpack configured for IE 10 compat (no arrow functions, no const in output)
+- Browser baseline is Chrome 108+ (`@babel/preset-env` target). `output.environment` keeps webpack's *runtime* ES5-only — it does not make the app IE10-compatible, since business code is transpiled for modern browsers
+- Code splitting: the default vendor merging in `splitChunks` is disabled, so every dynamic `import()` becomes an independent chunk under `dist/js/`
 - HTML template at `src/index.html`
 
 ## Conventions

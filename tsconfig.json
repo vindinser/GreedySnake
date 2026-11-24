@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "module": "ES2015",
+    "module": "ESNext", // 支持 import()，第三方库才能按需动态加载并被 webpack 切成独立 chunk
     "moduleResolution": "node", // 与 webpack 的解析方式一致，支持目录索引导入
     "target": "ES2015",
     "strict": true,

@@ -7,6 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "webpack serve",
     "build": "webpack",
+    "build:prod": "webpack --mode production",
+    "typecheck": "tsc --noEmit",
     "start": "webpack serve --open chrome.exe"
   },
   "keywords": [
