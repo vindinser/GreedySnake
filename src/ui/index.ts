@@ -1,0 +1,10 @@
+// 共享 UI 组件：所有游戏只从这里取通用控件，样式一律走 src/style/ui.less 的 token
+export { createButton } from './button'
+export type { ButtonOptions, ButtonVariant } from './button'
+export { createPanel } from './panel'
+export type { Panel, PanelOptions } from './panel'
+export { createOverlay } from './overlay'
+export type { Overlay, OverlayOptions } from './overlay'
+export { createHud } from './hud'
+export type { Hud, HudItem } from './hud'
+export { createLoading } from './loading'

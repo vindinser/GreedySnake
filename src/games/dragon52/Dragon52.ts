@@ -10,9 +10,21 @@ import {
   randomTask,
   withSuit
 } from './cards'
+import { GameLoop } from '../../core/loop'
+import { audio } from '../../core/audio'
+import { storage } from '../../core/storage'
+import { createHud, Hud } from '../../ui'
 
 const PLAYER_NAMES = ['你', 'TA'];
 const TOTAL_CARDS = 52;
+
+// 历史最佳对局存储键
+const BEST_KEY = 'dragon52.best';
+
+interface BestResult {
+  p0: number;
+  p1: number;
+}
 
 class Dragon52 {
   root: HTMLElement;
@@ -34,7 +46,21 @@ class Dragon52 {
   drawing = false;
   // 当前特殊事件
   currentEvent: SpecialEvent | null = null;
-  bannerTimer: any = null;
+
+  // 统一游戏循环：驱动抽牌动画锁、横幅隐藏与延迟结算
+  loop: GameLoop;
+  // 抽牌动画锁的到期时刻（秒，基于循环累计运行时间）
+  private drawLockUntil = 0;
+  // 抽完最后一张后延迟结算的到期时刻
+  private finishAt = 0;
+  private pendingFinish = false;
+  // 特殊事件横幅自动隐藏的到期时刻
+  private bannerUntil = 0;
+  private bannerVisible = false;
+
+  // 历史最佳对局信息条
+  bestHud!: Hud;
+  private best: BestResult = { p0: 0, p1: 0 };
 
   // DOM 元素
   cardEle!: HTMLElement;
@@ -58,6 +84,7 @@ class Dragon52 {
   gameOverEle!: HTMLElement;
   finalScoreEles!: HTMLElement[];
   againBtnEle!: HTMLElement;
+  bestSlotEle!: HTMLElement;
 
   constructor(root: HTMLElement) {
     this.root = root;
@@ -94,10 +121,33 @@ class Dragon52 {
       this.root.querySelector('#finalScore1')!
     ];
     this.againBtnEle = this.root.querySelector('#againBtn')!;
+    this.bestSlotEle = this.root.querySelector('#bestSlot')!;
+
+    this.best = storage.get<BestResult>(BEST_KEY, { p0: 0, p1: 0 });
+
+    this.loop = new GameLoop({ update: (dt, elapsed) => this.update(dt, elapsed) });
 
     this.initTrack();
+    this.initBestHud();
     this.initButtons();
     this.reset();
+    this.loop.start();
+  }
+
+  // ========== 历史最佳 ==========
+  initBestHud() {
+    this.bestHud = createHud([{ label: 'BEST', value: `${this.best.p0} : ${this.best.p1}` }]);
+    this.bestSlotEle.innerHTML = '';
+    this.bestSlotEle.appendChild(this.bestHud.el);
+  }
+
+  saveBest() {
+    const total = this.scores[0] + this.scores[1];
+    const bestTotal = this.best.p0 + this.best.p1;
+    if (total <= bestTotal) return;
+    this.best = { p0: this.scores[0], p1: this.scores[1] };
+    storage.set(BEST_KEY, this.best);
+    this.bestHud.setItem(0, `${this.best.p0} : ${this.best.p1}`);
   }
 
   // ========== 牌堆轨道 ==========
@@ -153,6 +203,8 @@ class Dragon52 {
     this.draws = [0, 0];
     this.finished = false;
     this.currentEvent = null;
+    this.drawing = false;
+    this.pendingFinish = false;
     this.hideEvent();
     this.gameOverEle.classList.remove('show');
     this.drawBtnEle.innerHTML = '抽 牌';
@@ -175,6 +227,8 @@ class Dragon52 {
       return;
     }
     this.drawing = true;
+    // 动画锁到期时刻由循环推进
+    this.drawLockUntil = this.now() + 0.3;
 
     const number = this.deck[this.drawIndex++];
     this.drawn[number - 1] = true;
@@ -225,15 +279,14 @@ class Dragon52 {
     this.turn = 1 - this.turn;
     this.updateUI();
 
+    audio.play('flip');
+
     // 抽完最后一张
     if (this.drawIndex >= TOTAL_CARDS) {
       this.drawBtnEle.innerHTML = '牌已抽完';
-      setTimeout(() => this.finish(), 800);
+      this.pendingFinish = true;
+      this.finishAt = this.now() + 0.8;
     }
-
-    setTimeout(() => {
-      this.drawing = false;
-    }, 300);
   }
 
   // 显示牌面（带翻牌动画）
@@ -278,14 +331,13 @@ class Dragon52 {
     this.eventNameEle.innerHTML = event.name;
     this.eventDescEle.innerHTML = event.desc;
     this.eventBannerEle.classList.add('show');
-    clearTimeout(this.bannerTimer);
-    this.bannerTimer = setTimeout(() => this.hideEvent(), 4000);
+    this.bannerVisible = true;
+    this.bannerUntil = this.now() + 4;
   }
 
   hideEvent() {
     this.eventBannerEle.classList.remove('show');
-    clearTimeout(this.bannerTimer);
-    this.bannerTimer = null;
+    this.bannerVisible = false;
   }
 
   // ========== 界面刷新 ==========
@@ -304,13 +356,33 @@ class Dragon52 {
     this.finished = true;
     this.finalScoreEles[0].innerHTML = String(this.scores[0]);
     this.finalScoreEles[1].innerHTML = String(this.scores[1]);
+    this.saveBest();
     this.gameOverEle.classList.add('show');
+    audio.play(this.scores[0] >= this.scores[1] ? 'win' : 'lose');
+  }
+
+  // ========== 每帧推进 ==========
+  update(dt: number, elapsed: number) {
+    if (this.drawing && elapsed >= this.drawLockUntil) {
+      this.drawing = false;
+    }
+    if (this.pendingFinish && elapsed >= this.finishAt) {
+      this.pendingFinish = false;
+      this.finish();
+    }
+    if (this.bannerVisible && elapsed >= this.bannerUntil) {
+      this.hideEvent();
+    }
+  }
+
+  // 循环累计运行时间（秒）
+  private now(): number {
+    return this.loop.elapsedTime;
   }
 
   // ========== 销毁 ==========
   destroy() {
-    clearTimeout(this.bannerTimer);
-    this.bannerTimer = null;
+    this.loop.stop();
   }
 }
 

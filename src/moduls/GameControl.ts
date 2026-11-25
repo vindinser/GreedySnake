@@ -1,6 +1,11 @@
-import Snake from "./Snake";
-import Food from "./Food"
-import ScorePanel from "./ScorePanel";
+import Snake from './Snake';
+import Food from './Food'
+import ScorePanel from './ScorePanel';
+import { GameLoop } from '../core/loop'
+import { Direction, InputManager } from '../core/input'
+import { audio } from '../core/audio'
+import { storage } from '../core/storage'
+import { createHud, Hud } from '../ui'
 
 // 游戏状态
 const POWER_OFF = 0;
@@ -8,19 +13,35 @@ const POWER_ON = 1;
 const PLAYING = 2;
 const PAUSED = 3;
 
+// 最高分存储键
+const BEST_KEY = 'snake.best';
+
 class GameControl {
   // 游戏挂载的容器，所有元素都在该容器内查找
   root: HTMLElement;
   snake!: Snake;
   food!: Food;
   scorePanel!: ScorePanel;
+  // 统一游戏循环：驱动蛇的移动与待机时钟
+  loop: GameLoop;
+  // 统一输入层：键盘与滑动
+  input: InputManager;
+  // 最高分信息条
+  bestHud!: Hud;
 
-  snakeToDirection: string = '';
-  rightToDirection: Array<string> = [ 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Up', 'Down', 'Left', 'Right' ];
+  // 蛇的朝向
+  snakeToDirection: Direction = 'right';
 
-  snakeIsLive: Boolean = false;
+  snakeIsLive: boolean = false;
   isFast: boolean = false;
   gameState: number = POWER_OFF;
+
+  // 距离下一次移动还需累积的毫秒数
+  private moveAccumulator = 0;
+  // 距离待机时钟跳一秒还需累积的秒数
+  private clockAccumulator = 0;
+  // 历史最高分
+  private best = 0;
 
   // DOM 元素
   gameOverEle!: HTMLElement;
@@ -33,15 +54,10 @@ class GameControl {
   pauseOverlay!: HTMLElement;
   ledLight!: HTMLElement;
   standbyClock!: HTMLElement;
-  clockTimer: any = null;
-  // 蛇移动的定时器
-  runTimer: any = null;
-  // 绑定的键盘事件处理函数，销毁游戏时解绑
-  keyHandler: (event: KeyboardEvent) => void;
+  bestSlotEle!: HTMLElement;
 
   constructor(root: HTMLElement) {
     this.root = root;
-    this.keyHandler = this.keyDownHandler.bind(this);
     this.gameOverEle = this.root.querySelector('#gameOver')!;
     this.finalScoreEle = this.root.querySelector('#finalScore')!;
     this.restartBtn = this.root.querySelector('#restartBtn')!;
@@ -52,6 +68,15 @@ class GameControl {
     this.pauseOverlay = this.root.querySelector('#pauseOverlay')!;
     this.ledLight = this.root.querySelector('#ledLight')!;
     this.standbyClock = this.root.querySelector('#standbyClock')!;
+    this.bestSlotEle = this.root.querySelector('#bestSlot')!;
+
+    // 读取历史最高分
+    this.best = storage.get<number>(BEST_KEY, 0);
+
+    this.loop = new GameLoop({ update: (dt) => this.update(dt) });
+    this.input = new InputManager(document);
+
+    this.initBestHud();
     this.gameInit()
   }
 
@@ -61,10 +86,23 @@ class GameControl {
     this.initStartBtn();
     this.initRestart();
     this.initVirtualControls();
-    this.initTouchControls();
-    document.addEventListener('keydown', this.keyHandler);
-    this.updateClock();
-    this.clockTimer = setInterval(() => this.updateClock(), 1000);
+    this.initInput();
+    // 循环常驻：待机时钟与蛇的移动都由它驱动
+    this.loop.start();
+  }
+
+  // ========== 最高分 ==========
+  initBestHud() {
+    this.bestHud = createHud([{ label: 'BEST:', value: this.best }]);
+    this.bestSlotEle.innerHTML = '';
+    this.bestSlotEle.appendChild(this.bestHud.el);
+  }
+
+  saveBest(score: number) {
+    if (score <= this.best) return;
+    this.best = score;
+    storage.set(BEST_KEY, this.best);
+    this.bestHud.setItem(0, this.best);
   }
 
   // ========== 电源控制 ==========
@@ -92,13 +130,14 @@ class GameControl {
     this.ledLight.classList.add('on');
     this.snakeIsLive = false;
     this.startBtn.textContent = 'START';
+    audio.play('select');
   }
 
   powerOff() {
     this.gameState = POWER_OFF;
     this.snakeIsLive = false;
     this.isFast = false;
-    this.snakeToDirection = '';
+    this.snakeToDirection = 'right';
     this.readyOverlay.classList.remove('show');
     this.gameOverEle.classList.remove('show');
     this.pauseOverlay.classList.remove('show');
@@ -114,6 +153,7 @@ class GameControl {
 
     // 重置蛇
     this.resetSnake();
+    audio.play('select');
   }
 
   // ========== START / PAUSE 按钮 ==========
@@ -144,13 +184,14 @@ class GameControl {
     this.gameState = PLAYING;
     this.readyOverlay.classList.remove('show');
     this.snakeIsLive = true;
-    this.snakeToDirection = 'ArrowRight';
+    this.snakeToDirection = 'right';
     this.startBtn.textContent = 'PAUSE';
+    this.moveAccumulator = 0;
 
     this.resetSnake();
     this.food = new Food(this.root);
     this.scorePanel = new ScorePanel(this.root);
-    this.snakeRun();
+    audio.play('click');
   }
 
   // 重置蛇：蛇头回到网格中心
@@ -176,7 +217,7 @@ class GameControl {
     this.snakeIsLive = true;
     this.pauseOverlay.classList.remove('show');
     this.startBtn.textContent = 'PAUSE';
-    this.snakeRun();
+    this.moveAccumulator = 0;
   }
 
   // ========== 重新开始 ==========
@@ -184,7 +225,7 @@ class GameControl {
     this.restartBtn.addEventListener('click', () => {
       this.restart();
     });
-    this.restartBtn.addEventListener('touchstart', ((e: Event) => {
+    this.restartBtn.addEventListener('touchstart', ((e: TouchEvent) => {
       e.preventDefault();
       this.restart();
     }) as EventListener, { passive: false });
@@ -193,7 +234,7 @@ class GameControl {
   restart() {
     this.gameState = PLAYING;
     this.snakeIsLive = true;
-    this.snakeToDirection = 'ArrowRight';
+    this.snakeToDirection = 'right';
     this.isFast = false;
     this.scorePanel.score = 0;
     this.scorePanel.level = 1;
@@ -202,26 +243,28 @@ class GameControl {
     this.gameOverEle.classList.remove('show');
     this.pauseOverlay.classList.remove('show');
     this.startBtn.textContent = 'PAUSE';
+    this.moveAccumulator = 0;
 
     this.resetSnake();
     this.food = new Food(this.root);
     this.food.change();
 
-    this.snakeRun();
+    audio.play('click');
   }
 
   showGameOver() {
     this.finalScoreEle.innerHTML = String(this.scorePanel.score);
+    this.saveBest(this.scorePanel.score);
     this.gameOverEle.classList.add('show');
     this.startBtn.textContent = 'START';
+    audio.play('lose');
   }
 
   // ========== 销毁游戏（离开游戏时调用） ==========
   destroy() {
     this.snakeIsLive = false;
-    clearTimeout(this.runTimer);
-    clearInterval(this.clockTimer);
-    document.removeEventListener('keydown', this.keyHandler);
+    this.loop.stop();
+    this.input.destroy();
   }
 
   // ========== 待机时钟 ==========
@@ -236,47 +279,44 @@ class GameControl {
 
   // ========== 虚拟按键 ==========
   initVirtualControls() {
-    const dpadBtns = document.querySelectorAll('.dpad-btn');
-    const actionBtns = document.querySelectorAll('.action-btn');
+    const dpadBtns = this.root.querySelectorAll('.dpad-btn');
+    const actionBtns = this.root.querySelectorAll('.action-btn');
 
     dpadBtns.forEach(btn => {
       const dir = btn.getAttribute('data-dir');
       if (!dir) return;
 
-      btn.addEventListener('mousedown', (e) => {
+      const handler = (e: Event) => {
         e.preventDefault();
-        this.handleDirection(dir);
-      });
+        this.handleDirection(dir as Direction);
+      };
 
-      btn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        this.handleDirection(dir);
-      }, { passive: false });
+      btn.addEventListener('mousedown', handler);
+      btn.addEventListener('touchstart', handler, { passive: false });
     });
 
     actionBtns.forEach(btn => {
       const action = btn.getAttribute('data-action');
       if (!action) return;
 
-      btn.addEventListener('mousedown', (e) => {
+      const handler = (e: Event) => {
         e.preventDefault();
         this.handleAction(action);
-      });
+      };
 
-      btn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        this.handleAction(action);
-      }, { passive: false });
+      btn.addEventListener('mousedown', handler);
+      btn.addEventListener('touchstart', handler, { passive: false });
     });
   }
 
-  handleDirection(dir: string) {
+  handleDirection(direction: Direction) {
     if (this.gameState === POWER_ON) {
+      // 开机状态下按方向键只用来开始游戏，不改变朝向
       this.startGame();
       return;
     }
     if (this.gameState === PLAYING) {
-      this.snakeToDirection = dir;
+      this.snakeToDirection = direction;
     }
   }
 
@@ -289,40 +329,21 @@ class GameControl {
     }
   }
 
-  // ========== 触摸滑动 ==========
-  initTouchControls() {
-    const stage = this.root.querySelector('.stage');
-    if (!stage) return;
+  // ========== 键盘与滑动 ==========
+  initInput() {
+    // 方向监听先注册：开机状态下按方向键只用来开始游戏
+    this.input.onDirection(direction => this.handleDirection(direction));
 
-    let startX = 0;
-    let startY = 0;
+    this.input.onAnyKey(event => this.handleKey(event));
 
-    stage.addEventListener('touchstart', ((e: TouchEvent) => {
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-    }) as EventListener, { passive: true });
-
-    stage.addEventListener('touchend', ((e: TouchEvent) => {
-      if (this.gameState !== PLAYING) return;
-      const endX = e.changedTouches[0].clientX;
-      const endY = e.changedTouches[0].clientY;
-
-      const diffX = endX - startX;
-      const diffY = endY - startY;
-      const minSwipe = 20;
-
-      if (Math.abs(diffX) < minSwipe && Math.abs(diffY) < minSwipe) return;
-
-      if (Math.abs(diffX) > Math.abs(diffY)) {
-        this.snakeToDirection = diffX > 0 ? 'ArrowRight' : 'ArrowLeft';
-      } else {
-        this.snakeToDirection = diffY > 0 ? 'ArrowDown' : 'ArrowUp';
-      }
-    }) as EventListener, { passive: true });
+    // 屏幕滑动操控方向
+    const stage = this.root.querySelector<HTMLElement>('.stage');
+    if (stage) {
+      this.input.onSwipe(stage, direction => this.handleDirection(direction));
+    }
   }
 
-  // ========== 键盘 ==========
-  keyDownHandler(event: KeyboardEvent) {
+  handleKey(event: KeyboardEvent) {
     // 开机状态：任意键开始游戏
     if (this.gameState === POWER_ON) {
       this.startGame();
@@ -339,9 +360,6 @@ class GameControl {
 
     // 游戏中
     if (this.gameState === PLAYING) {
-      if (this.rightToDirection.includes(event.key)) {
-        this.snakeToDirection = event.key;
-      }
       if (event.key === ' ') {
         this.isFast = !this.isFast;
       }
@@ -361,31 +379,46 @@ class GameControl {
     return levelSpeed;
   }
 
-  snakeRun() {
+  // 每帧推进：待机时钟与蛇的移动
+  update(dt: number) {
+    this.clockAccumulator += dt;
+    if (this.clockAccumulator >= 1) {
+      this.clockAccumulator -= 1;
+      this.updateClock();
+    }
+
     if (!this.snakeIsLive) return;
 
+    // 按当前速度累积步进时长
+    this.moveAccumulator += dt * 1000;
+    const speed = this.getSpeed();
+    // 单帧最多推进几步，避免卡顿后瞬间连跳
+    let guard = 0;
+    while (this.moveAccumulator >= speed && this.snakeIsLive && guard < 4) {
+      this.moveAccumulator -= speed;
+      this.step();
+      guard++;
+    }
+  }
+
+  // 走一格
+  step() {
     let X = this.snake.X;
     let Y = this.snake.Y;
 
     switch (this.snakeToDirection) {
-      case "ArrowUp":
-      case "Up":
+      case 'up':
         Y -= 10;
         break;
-      case "ArrowDown":
-      case "Down":
+      case 'down':
         Y += 10;
         break;
-      case "ArrowLeft":
-      case "Left":
+      case 'left':
         X -= 10;
         break;
-      case "ArrowRight":
-      case "Right":
+      case 'right':
         X += 10;
         break;
-      default:
-        console.log('%cWrong Direction!', 'color: red; font-size: 20px; font-weight: 600;')
     }
 
     this.checkIsEating(X, Y);
@@ -398,8 +431,6 @@ class GameControl {
       this.showGameOver();
       this.snakeIsLive = false
     }
-
-    this.snakeIsLive && (this.runTimer = setTimeout(this.snakeRun.bind(this), this.getSpeed()))
   }
 
   checkIsEating(X: number, Y: number) {
@@ -407,6 +438,7 @@ class GameControl {
       this.food.change();
       this.scorePanel.addScore();
       this.snake.addSnakeBody();
+      audio.play('eat');
     }
   }
 }

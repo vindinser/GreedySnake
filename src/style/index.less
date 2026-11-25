@@ -25,6 +25,16 @@ body {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 
+  // ===== 主题 token =====
+  // 主页使用这套基础暗色；每款游戏通过 body.theme-<id> 覆盖 accent / surface 等少数变量换肤
+  --gs-accent: #44cc44;
+  --gs-accent-dark: #228822;
+  --gs-accent-soft: rgba(68, 204, 68, 0.5);
+  --gs-surface: #1e1e1e;
+  --gs-border: #4a4a4a;
+  --gs-text: #ddd;
+  --gs-text-dim: #888;
+
   // 用 auto 外边距居中：内容高于视口时可以正常滚动，不会被裁掉顶部
   .home,
   .app-game {
@@ -237,11 +247,21 @@ body {
 .game-content {
   display: flex;
   justify-content: center;
+  // 供共享覆盖层定位
+  position: relative;
 }
 
 // ===== 粉色主题（游龙52式） =====
-// 游戏模块在挂载时给 body 加 .theme-pink，退出时移除
-body.theme-pink {
+// 主题类由外壳（App）在挂载游戏时添加、退出时移除，游戏本身不碰 document.body
+body.theme-dragon52 {
+  --gs-accent: #ff4d6d;
+  --gs-accent-dark: #d81e5b;
+  --gs-accent-soft: rgba(255, 77, 109, 0.5);
+  --gs-surface: #3a1024;
+  --gs-border: #ff9ec0;
+  --gs-text: #ffe3ea;
+  --gs-text-dim: #d9a3b2;
+
   background: linear-gradient(135deg, #2b0716 0%, #4d0f28 50%, #7a1236 100%);
 
   .game-bar {
@@ -375,6 +395,8 @@ body.theme-pink {
   position: relative;
   margin: 0 auto;
   background: @bg-color;
+  // 滑动操控方向时不要触发页面滚动
+  touch-action: none;
   box-shadow:
     inset 0 0 30px rgba(0,0,0,0.2),
     0 0 15px rgba(168,217,138,0.3);

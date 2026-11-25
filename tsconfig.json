@@ -1,9 +1,11 @@
 {
   "compilerOptions": {
     "module": "ESNext", // 支持 import()，第三方库才能按需动态加载并被 webpack 切成独立 chunk
-    "moduleResolution": "node", // 与 webpack 的解析方式一致，支持目录索引导入
+    "moduleResolution": "bundler", // 与 webpack 的解析方式一致（支持目录索引与 exports 字段）
     "target": "ES2015",
     "strict": true,
+    "skipLibCheck": true, // 不检查 node_modules 的 .d.ts（第三方类型噪音不影响本项目代码）
     "noEmitOnError": true // 有错误不要编译，避免错误代码被打包
-  }
+  },
+  "include": ["src/**/*"]
 }

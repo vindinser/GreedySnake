@@ -24,6 +24,7 @@ const CONSOLE_TEMPLATE = `
       <div>
         SCORE:<span id="score">0</span>
       </div>
+      <div id="bestSlot"></div>
       <div>
         LEVEL:<span id="level">1</span>
       </div>
@@ -75,11 +76,11 @@ const CONSOLE_TEMPLATE = `
   <div class="controls">
     <!-- 左侧：十字方向键 -->
     <div class="dpad">
-      <button class="dpad-btn dpad-up" data-dir="ArrowUp">▲</button>
-      <button class="dpad-btn dpad-left" data-dir="ArrowLeft">◀</button>
+      <button class="dpad-btn dpad-up" data-dir="up">▲</button>
+      <button class="dpad-btn dpad-left" data-dir="left">◀</button>
       <div class="dpad-center"></div>
-      <button class="dpad-btn dpad-right" data-dir="ArrowRight">▶</button>
-      <button class="dpad-btn dpad-down" data-dir="ArrowDown">▼</button>
+      <button class="dpad-btn dpad-right" data-dir="right">▶</button>
+      <button class="dpad-btn dpad-down" data-dir="down">▼</button>
     </div>
 
     <!-- 中间：START 按钮 -->

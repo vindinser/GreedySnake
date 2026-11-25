@@ -18,15 +18,16 @@ const dragon52: GameModule = {
   title: '游龙52式',
   description: '52 张牌的情侣挑战，藏着羞羞的惩罚',
   icon: ICON,
+  category: 'card',
+  tags: ['双人', '聚会'],
+  // 主题由外壳托管：挂载时加 body.theme-dragon52，退出时移除
+  theme: 'dragon52',
   mount(container: HTMLElement) {
     container.innerHTML = DRAGON_TEMPLATE
-    // 切换整页主题色
-    document.body.classList.add('theme-pink')
     const game = new Dragon52(container)
     return {
       destroy() {
         game.destroy()
-        document.body.classList.remove('theme-pink')
       }
     }
   }

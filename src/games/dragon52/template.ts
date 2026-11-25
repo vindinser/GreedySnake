@@ -29,6 +29,9 @@ const DRAGON_TEMPLATE = `
     </div>
   </div>
 
+  <!-- 历史最佳 -->
+  <div class="dragon-best" id="bestSlot"></div>
+
   <!-- 特殊事件横幅 -->
   <div class="event-banner" id="eventBanner">
     <span class="event-name" id="eventName"></span>

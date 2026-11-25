@@ -22,6 +22,8 @@ const snakeGame: GameModule = {
   title: 'GREEDY SNAKE',
   description: '吃到食物越来越长，撞墙或撞到自己就结束',
   icon: ICON,
+  category: 'arcade',
+  tags: ['复古掌机', '单人'],
   mount(container: HTMLElement) {
     container.innerHTML = CONSOLE_TEMPLATE
     const control = new GameControl(container)

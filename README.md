@@ -28,8 +28,10 @@ npm run build:prod   # 生产构建（压缩 + 文件名哈希）
 | `npm run dev` | 启动 webpack-dev-server，访问 http://localhost:8080 |
 | `npm run build` | 开发构建到 `dist/` |
 | `npm run build:prod` | 生产构建到 `dist/`（压缩 + 哈希文件名，产物在 `dist/js/`） |
-| `npm run typecheck` | `tsc --noEmit` 类型检查 |
-| `npm test` | 测试（暂未配置测试框架） |
+| `npm run typecheck` | `tsc --noEmit` 类型检查（覆盖 `src` 与 `test`） |
+| `npm test` | Vitest 单元测试 + 全注册表冒烟测试 |
+| `npm run test:watch` | Vitest 监听模式 |
+| `npm run verify:e2e` | 用无头浏览器跑一遍真实页面（需先 `npm run build:prod`） |
 
 ## 页面结构
 
@@ -39,6 +41,8 @@ npm run build:prod   # 生产构建（压缩 + 文件名哈希）
 |------|------|
 | **主页** `#homeView` | 游戏选择页，列出注册表中的所有游戏卡片，点击卡片进入对应游戏 |
 | **游戏视图** `#gameView` | 顶部为标题条（含 `◀ MENU` 返回主页按钮），下方为游戏内容 |
+
+地址栏采用哈希路由：`#/home` 是主页，`#/<游戏id>` 直接进入对应游戏（深链可分享，浏览器后退键可用，未知 id 自动回落到主页）。
 
 ## 操作方式
 
@@ -73,11 +77,27 @@ npm run build:prod   # 生产构建（压缩 + 文件名哈希）
 
 ## 技术栈
 
-- **语言**：TypeScript（严格模式）
+- **语言**：TypeScript 5.9（严格模式）
 - **构建**：Webpack 5 + Babel + ts-loader
 - **样式**：Less + PostCSS
+- **测试**：Vitest + jsdom（单元测试 + 全注册表挂载/销毁冒烟测试）
 - **兼容性**：现代浏览器（Chrome 108+）。Webpack 运行时虽降级为 ES5，但业务代码按现代浏览器转译，**不再支持 IE 10**
 - **代码分割**：动态 `import()` 会被切成独立 chunk，第三方库按需下载，不进首屏主包
+
+## 公共基建
+
+所有游戏共用 `src/core/` 与 `src/ui/`，新增游戏不用重复造轮子：
+
+| 模块 | 能力 |
+|------|------|
+| `src/core/loop.ts` | 统一游戏循环：单 rAF、帧间隔截断、页面隐藏自动暂停 |
+| `src/core/input.ts` | 统一输入：键盘（方向键 / WASD 归一化）与触屏滑动 |
+| `src/core/audio.ts` | WebAudio 程序化音效，15 个内置 8-bit 音色，无音频素材文件 |
+| `src/core/storage.ts` | `localStorage` 封装（`gs:` 前缀，异常兜底），用于最高分等存档 |
+| `src/core/dispose.ts` | 逆序、幂等的清理动作收拢器 |
+| `src/ui/` | 共享按钮 / 面板 / 覆盖层 / 信息条 / 载入占位组件 |
+
+主题采用 CSS 变量 token（`--gs-accent` 等）。每款游戏声明 `theme` 字段，由外壳统一加挂 `body.theme-*` 并在退出时移除 —— 游戏本身不再操作 `document.body`。
 
 ## 项目结构
 
@@ -85,14 +105,21 @@ npm run build:prod   # 生产构建（压缩 + 文件名哈希）
 src/
 ├── index.html          # HTML 模板（主页 + 游戏视图两个容器）
 ├── index.ts            # 入口文件
+├── core/               # 公共基建（循环 / 输入 / 音效 / 存档 / 清理）
+│   ├── loop.ts         #   统一游戏循环
+│   ├── input.ts        #   统一输入层
+│   ├── audio.ts        #   WebAudio 音效引擎
+│   ├── storage.ts      #   localStorage 封装
+│   └── dispose.ts      #   清理动作收拢器
+├── ui/                 # 共享 UI 组件（按钮 / 面板 / 覆盖层 / 信息条 / 载入）
 ├── moduls/             # 游戏模块（注意：目录名拼写如此）
-│   ├── App.ts          # 应用外壳（主页渲染、视图切换、游戏挂载/销毁）
-│   ├── GameControl.ts  # 贪吃蛇控制器（状态机、输入处理）
+│   ├── App.ts          # 应用外壳（主页渲染、哈希路由、主题托管、游戏挂载/销毁）
+│   ├── GameControl.ts  # 贪吃蛇控制器（状态机、游戏循环、输入处理）
 │   ├── Snake.ts        # 蛇（移动、碰撞检测）
 │   ├── Food.ts         # 食物（随机生成）
 │   └── ScorePanel.ts   # 计分板（分数、等级）
 ├── games/              # 游戏注册表（新增小游戏的扩展点）
-│   ├── types.ts        # GameModule / GameInstance 接口定义
+│   ├── types.ts        # GameModule / GameInstance / GameCategory 接口定义
 │   ├── index.ts        # 游戏清单，追加一项即可上线一款新游戏
 │   ├── snake/          # 贪吃蛇游戏模块
 │   │   ├── index.ts    # 挂载逻辑与图标
@@ -104,7 +131,16 @@ src/
 │       ├── template.ts # 牌桌 HTML 模板
 │       └── style.less  # 粉色主题样式
 └── style/
-    └── index.less      # 全局样式（主页、贪吃蛇游戏机、粉色主题、响应式）
+    ├── index.less      # 全局样式（主页、贪吃蛇游戏机、主题 token、响应式）
+    └── ui.less         # 共享 UI 组件样式
+
+test/                  # Vitest 测试
+├── setup.ts            # jsdom 环境补齐（布局偏移、AudioContext 等）
+├── core.test.ts        # core 各模块单元测试
+├── ui.test.ts          # UI 组件单元测试
+└── smoke.test.ts       # 全注册表挂载/销毁冒烟测试
+scripts/
+└── e2e.mjs             # 无依赖 CDP 脚本：无头浏览器跑真实页面
 ```
 
 ## 新增一款小游戏
@@ -118,11 +154,16 @@ src/
      title: 'MY GAME',
      description: '一句话简介',
      icon: '<svg>...</svg>',       // 主页卡片图标
+     category: 'puzzle',           // 可选：arcade / puzzle / card / board / 3d
+     tags: ['单人'],               // 可选
+     theme: 'my-game',             // 可选：外壳会自动加挂 body.theme-my-game
      mount(container: HTMLElement) {
        container.innerHTML = '<div class="my-game"></div>'
+       const loop = new GameLoop({ update: (dt) => { /* ... */ } })
+       loop.start()
        return {
          destroy() {
-           // 清理定时器、事件监听
+           loop.stop()   // 清理定时器、事件监听
          }
        }
      }
@@ -132,7 +173,8 @@ src/
 2. 在 `src/games/index.ts` 中登记：`const games: GameModule[] = [snake, dragon52, myGame]`
 
 3. 主页卡片、游戏标题条、返回主页逻辑都由 `App` 自动处理，无需改动外壳代码。
-4. 需要独立主题时，可在模块内 `import './style.less'`，并在 `mount` 时给 `document.body` 加 `theme-xxx` 类、`destroy` 时移除（参考 `games/dragon52`）。
+4. 需要独立主题时，声明 `theme: '<名字>'` 即可 —— 外壳会在挂载时加 `body.theme-<名字>`、退出时移除。**游戏自己不要操作 `document.body`。**
+5. 游戏循环、键盘输入、音效、存档一律用 `src/core/`，通用控件用 `src/ui/`，不要重复实现。
 
 ### 引入第三方库
 

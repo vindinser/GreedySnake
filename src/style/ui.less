@@ -1,0 +1,160 @@
+// 共享 UI 组件样式：只依赖 src/style/index.less 里定义的 token，不写死具体游戏配色
+
+// ===== 按钮 =====
+.gs-btn {
+  padding: 8px 18px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: #10240f;
+  background: linear-gradient(180deg, var(--gs-accent) 0%, var(--gs-accent-dark, var(--gs-accent)) 100%);
+  border: 2px solid var(--gs-accent-soft, var(--gs-accent));
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s, filter 0.15s;
+  box-shadow:
+    0 3px 8px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+
+  &:active {
+    transform: translateY(1px);
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.35);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--gs-accent);
+    outline-offset: 2px;
+  }
+}
+
+.gs-btn-ghost {
+  color: var(--gs-text);
+  background: linear-gradient(180deg, #3a3a3a 0%, #242424 100%);
+  border-color: var(--gs-border);
+}
+
+.gs-btn-danger {
+  color: #fff;
+  background: linear-gradient(180deg, #e05555 0%, #b62f2f 100%);
+  border-color: #ff8080;
+}
+
+// ===== 面板 =====
+.gs-panel {
+  background: var(--gs-surface);
+  border: 2px solid var(--gs-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.gs-panel-title {
+  padding: 8px 12px;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--gs-accent);
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid var(--gs-border);
+}
+
+.gs-panel-body {
+  padding: 12px;
+}
+
+// ===== 覆盖层 =====
+.gs-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.82);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+
+  &.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+// ===== 信息条 =====
+.gs-hud {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.gs-hud-cell {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 14px;
+}
+
+.gs-hud-label {
+  // 继承所在容器的配色，只做轻微淡化，保证与游戏主题一致
+  color: inherit;
+  opacity: 0.8;
+}
+
+.gs-hud-value {
+  color: #fff;
+  text-shadow: 0 0 10px var(--gs-accent-soft, var(--gs-accent));
+}
+
+// ===== 载入占位 =====
+.gs-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 160px;
+  color: var(--gs-text-dim);
+  font-size: 12px;
+  letter-spacing: 3px;
+}
+
+.gs-loading-spinner {
+  width: 26px;
+  height: 26px;
+  border: 3px solid var(--gs-border);
+  border-top-color: var(--gs-accent);
+  border-radius: 50%;
+  animation: gs-spin 0.9s linear infinite;
+}
+
+@keyframes gs-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ===== 启动失败提示 =====
+.gs-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 28px 24px;
+  text-align: center;
+}
+
+.gs-error-title {
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: #ff6b6b;
+}
+
+.gs-error-msg {
+  max-width: 320px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--gs-text-dim);
+  word-break: break-word;
+}
