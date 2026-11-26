@@ -1,0 +1,283 @@
+// 2048：主题与棋盘样式
+
+// ===== 主题（暖琥珀色） =====
+// 主题类由外壳在挂载时加挂 body.theme-2048，退出时移除
+body.theme-2048 {
+  --gs-accent: #ed9b40;
+  --gs-accent-dark: #b06a1c;
+  --gs-accent-soft: rgba(237, 155, 64, 0.5);
+  --gs-surface: #3a2a1a;
+  --gs-border: #7a5730;
+  --gs-text: #f3e2cf;
+  --gs-text-dim: #b89a7c;
+
+  background: linear-gradient(135deg, #2a1b0e 0%, #40260f 50%, #593312 100%);
+
+  .game-bar {
+    background: linear-gradient(180deg, #e8a94f 0%, #b06a1c 100%);
+    border-color: #f0c078;
+  }
+
+  .back-btn {
+    color: #3a2410;
+    background: linear-gradient(180deg, #fbe3bb 0%, #e8b969 100%);
+    border-color: #f7d9a8;
+  }
+
+  .game-bar-title {
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.55);
+  }
+}
+
+// ===== 面板 =====
+.g2048 {
+  --g2048-cell: 68px;
+  --g2048-gap: 8px;
+  --g2048-pad: 12px;
+  --g2048-board-size: calc(var(--g2048-cell) * 4 + var(--g2048-gap) * 3 + var(--g2048-pad) * 2);
+
+  position: relative;
+  width: calc(var(--g2048-board-size) + 32px);
+  padding: 16px;
+  background: linear-gradient(180deg, #3d2b1a 0%, #2c1e11 100%);
+  border: 2px solid #6b4a26;
+  border-radius: 18px;
+  box-shadow:
+    0 0 0 3px rgba(0, 0, 0, 0.5),
+    0 16px 40px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  user-select: none;
+}
+
+// ===== 顶部 =====
+.g2048-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.g2048-title {
+  font-size: 34px;
+  font-weight: bold;
+  letter-spacing: 4px;
+  line-height: 1.1;
+  color: #f7c069;
+  text-shadow:
+    0 0 12px rgba(237, 155, 64, 0.55),
+    0 0 30px rgba(237, 155, 64, 0.3);
+}
+
+.g2048-sub {
+  margin-top: 4px;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #a9855f;
+}
+
+.g2048-hud {
+  padding-top: 4px;
+
+  .gs-hud {
+    gap: 12px;
+  }
+
+  .gs-hud-cell {
+    font-size: 12px;
+  }
+
+  .gs-hud-value {
+    font-size: 16px;
+    text-shadow: 0 0 10px rgba(237, 155, 64, 0.5);
+  }
+}
+
+// ===== 棋盘 =====
+.g2048-board {
+  position: relative;
+  width: var(--g2048-board-size);
+  height: var(--g2048-board-size);
+  padding: var(--g2048-pad);
+  background: #6b5240;
+  border-radius: 12px;
+  // 滑动操控时不要触发页面滚动
+  touch-action: none;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+.g2048-grid {
+  display: grid;
+  grid-template-columns: repeat(4, var(--g2048-cell));
+  grid-gap: var(--g2048-gap);
+}
+
+.g2048-cell {
+  width: var(--g2048-cell);
+  height: var(--g2048-cell);
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+}
+
+// 方块层：贴着棋盘内边距铺满
+.g2048-tiles {
+  position: absolute;
+  inset: var(--g2048-pad);
+}
+
+// ===== 方块 =====
+.g2048-tile {
+  --x: 0;
+  --y: 0;
+
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--g2048-cell);
+  height: var(--g2048-cell);
+  transform: translate(
+    calc(var(--x) * (var(--g2048-cell) + var(--g2048-gap))),
+    calc(var(--y) * (var(--g2048-cell) + var(--g2048-gap)))
+  );
+  transition: transform 0.12s ease-in-out;
+}
+
+.g2048-tile-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  font-size: 30px;
+  font-weight: bold;
+  line-height: 1;
+  color: #fff;
+  background: #8f7b66;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+}
+
+// 按数值配色
+.g2048-tile[data-v="2"] .g2048-tile-inner { background: #d4c3ae; color: #4b3a2a; }
+.g2048-tile[data-v="4"] .g2048-tile-inner { background: #c9b195; color: #4b3a2a; }
+.g2048-tile[data-v="8"] .g2048-tile-inner { background: #f2b179; }
+.g2048-tile[data-v="16"] .g2048-tile-inner { background: #f59563; }
+.g2048-tile[data-v="32"] .g2048-tile-inner { background: #f67c5f; }
+.g2048-tile[data-v="64"] .g2048-tile-inner { background: #f65e3b; }
+.g2048-tile[data-v="128"] .g2048-tile-inner { background: #edcf72; }
+.g2048-tile[data-v="256"] .g2048-tile-inner { background: #edcc61; }
+.g2048-tile[data-v="512"] .g2048-tile-inner { background: #edc850; }
+.g2048-tile[data-v="1024"] .g2048-tile-inner { background: #edc53f; }
+.g2048-tile[data-v="2048"] .g2048-tile-inner {
+  background: #edc22e;
+  box-shadow:
+    0 0 18px rgba(237, 194, 46, 0.75),
+    0 2px 5px rgba(0, 0, 0, 0.35);
+}
+.g2048-tile[data-v="4096"] .g2048-tile-inner { background: #3c3a32; color: #f7c069; }
+.g2048-tile[data-v="8192"] .g2048-tile-inner { background: #2b2922; color: #f7c069; }
+
+// 数字越大字号越小
+.g2048-tile[data-v="128"] .g2048-tile-inner,
+.g2048-tile[data-v="256"] .g2048-tile-inner,
+.g2048-tile[data-v="512"] .g2048-tile-inner { font-size: 24px; }
+.g2048-tile[data-v="1024"] .g2048-tile-inner,
+.g2048-tile[data-v="2048"] .g2048-tile-inner { font-size: 19px; }
+.g2048-tile[data-v="4096"] .g2048-tile-inner,
+.g2048-tile[data-v="8192"] .g2048-tile-inner { font-size: 16px; }
+
+// ===== 动画 =====
+.g2048-tile--new .g2048-tile-inner {
+  animation: g2048-appear 0.16s ease-out;
+}
+
+.g2048-tile--merged .g2048-tile-inner {
+  animation: g2048-pop 0.18s ease-out;
+}
+
+// 被合并吸收：先滑到位，再淡出
+.g2048-tile--absorbed {
+  opacity: 0;
+  transition:
+    transform 0.12s ease-in-out,
+    opacity 0.1s linear 0.12s;
+}
+
+@keyframes g2048-appear {
+  from {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes g2048-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.16); }
+  100% { transform: scale(1); }
+}
+
+// ===== 结算覆盖层 =====
+.g2048-over {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 26px 22px;
+  text-align: center;
+}
+
+.g2048-over-title {
+  font-size: 26px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  color: #f7c069;
+  text-shadow: 0 0 14px rgba(237, 155, 64, 0.6);
+}
+
+.g2048-over-desc {
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: #cbb69c;
+}
+
+// ===== 提示 =====
+.g2048-hint {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #9c7c58;
+}
+
+// ===== 窄屏适配 =====
+@media (max-width: 480px) {
+  .g2048 {
+    --g2048-cell: 16vw;
+    --g2048-gap: 1.4vw;
+    --g2048-pad: 2.4vw;
+
+    width: 100%;
+    padding: 12px;
+  }
+
+  .g2048-title {
+    font-size: 26px;
+  }
+
+  .g2048-tile-inner {
+    font-size: 6vw;
+  }
+
+  .g2048-tile[data-v="128"] .g2048-tile-inner,
+  .g2048-tile[data-v="256"] .g2048-tile-inner,
+  .g2048-tile[data-v="512"] .g2048-tile-inner { font-size: 5vw; }
+  .g2048-tile[data-v="1024"] .g2048-tile-inner,
+  .g2048-tile[data-v="2048"] .g2048-tile-inner { font-size: 4vw; }
+  .g2048-tile[data-v="4096"] .g2048-tile-inner,
+  .g2048-tile[data-v="8192"] .g2048-tile-inner { font-size: 3.4vw; }
+}

@@ -114,9 +114,9 @@ try {
 
   // ========== 1. 主页 ==========
   const cardCount = await evaluate(`document.querySelectorAll('.game-card').length`)
-  check('主页渲染出 2 张游戏卡片', cardCount === 2, `实际 ${cardCount}`)
+  check('主页渲染出 3 张游戏卡片', cardCount === 3, `实际 ${cardCount}`)
   const cardNames = await evaluate(`[...document.querySelectorAll('.card-name')].map(e => e.textContent).join('|')`)
-  check('卡片包含贪吃蛇与游龙52式', cardNames === '贪吃蛇|游龙52式', cardNames)
+  check('卡片包含贪吃蛇、游龙52式与 2048', cardNames === '贪吃蛇|游龙52式|2048', cardNames)
   const homeHash = await evaluate(`window.location.hash`)
   check('初始路由为空（视作主页）', homeHash === '', `hash=${homeHash}`)
   await shot('01-home.png')
@@ -211,7 +211,69 @@ try {
   const fallbackHash = await evaluate(`window.location.hash`)
   check('未知路由回落到主页', fallback === true, `hash=${fallbackHash}`)
 
-  // ========== 11. 全程无异常 ==========
+  // ========== 11. 2048 ==========
+  await evaluate(`window.location.hash = '#/2048'`)
+  await sleep(500)
+  const g2048Mounted = await evaluate(`!!document.querySelector('#gameContent .g2048')`)
+  check('2048 挂载成功', g2048Mounted === true)
+  const theme2048 = await evaluate(`document.body.classList.contains('theme-2048')`)
+  check('2048 应用 theme-2048 主题', theme2048 === true)
+  const gridCells = await evaluate(`document.querySelectorAll('.g2048-cell').length`)
+  check('棋盘 16 格', gridCells === 16, `实际 ${gridCells}`)
+  const initialTiles = await evaluate(`document.querySelectorAll('.g2048-tile').length`)
+  check('开局生成 2 个方块', initialTiles === 2, `实际 ${initialTiles}`)
+  const scoreText = await evaluate(`document.querySelector('#hudSlot .gs-hud-value')?.textContent || ''`)
+  check('分数信息条已渲染', scoreText === '0', `score=${scoreText}`)
+
+  const readBoard = `[...document.querySelectorAll('.g2048-tile')].map(e => e.dataset.v + '@' + e.style.getPropertyValue('--x') + ',' + e.style.getPropertyValue('--y')).sort().join('|')`
+  const beforeMove = await evaluate(readBoard)
+  for (const key of ['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown']) {
+    await evaluate(`document.dispatchEvent(new KeyboardEvent('keydown', {key:'${key}', bubbles:true}))`)
+    await sleep(220)
+  }
+  const afterMove = await evaluate(readBoard)
+  check('方向键驱动方块移动', beforeMove !== afterMove, `before=${beforeMove} after=${afterMove}`)
+  const tileCount = await evaluate(`document.querySelectorAll('.g2048-tile').length`)
+  check('移动后棋盘方块数量合理', tileCount >= 2, `实际 ${tileCount}`)
+
+  // 方块必须与对应的网格格严格对齐（纯 CSS 定位，逻辑测试发现不了）
+  const alignment = await evaluate(`(() => {
+    const cells = [...document.querySelectorAll('.g2048-cell')]
+    const tiles = [...document.querySelectorAll('.g2048-tile:not(.g2048-tile--absorbed)')]
+    if (!tiles.length) return 'no-tiles'
+    for (const t of tiles) {
+      const x = parseInt(t.style.getPropertyValue('--x'))
+      const y = parseInt(t.style.getPropertyValue('--y'))
+      const cell = cells[y * 4 + x]
+      if (!cell) return 'missing-cell'
+      const a = t.getBoundingClientRect()
+      const b = cell.getBoundingClientRect()
+      if (Math.abs(a.left - b.left) > 1 || Math.abs(a.top - b.top) > 1) return 'misaligned'
+    }
+    return 'aligned'
+  })()`)
+  check('方块与网格格严格对齐', alignment === 'aligned', alignment)
+  await shot('05-2048.png')
+
+  // 滑动操控
+  const beforeSwipe = await evaluate(readBoard)
+  await evaluate(`(() => {
+    const board = document.getElementById('board')
+    const down = new MouseEvent('pointerdown', {clientX: 100, clientY: 100, bubbles: true})
+    const up = new MouseEvent('pointerup', {clientX: 100, clientY: 180, bubbles: true})
+    board.dispatchEvent(down)
+    board.dispatchEvent(up)
+  })()`)
+  await sleep(220)
+  const afterSwipe = await evaluate(readBoard)
+  check('滑动操控生效', beforeSwipe !== afterSwipe)
+
+  await evaluate(`document.getElementById('backBtn').click()`)
+  await sleep(400)
+  const theme2048Off = await evaluate(`!document.body.classList.contains('theme-2048')`)
+  check('返回主页后 2048 主题已移除', theme2048Off === true)
+
+  // ========== 12. 全程无异常 ==========
   check('全程无未捕获异常', exceptions.length === 0, exceptions.join(' || '))
   check('全程无 console.error', consoleErrors.length === 0, consoleErrors.join(' || '))
 } catch (err) {
