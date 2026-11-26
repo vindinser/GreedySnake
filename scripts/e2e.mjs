@@ -114,9 +114,9 @@ try {
 
   // ========== 1. 主页 ==========
   const cardCount = await evaluate(`document.querySelectorAll('.game-card').length`)
-  check('主页渲染出 3 张游戏卡片', cardCount === 3, `实际 ${cardCount}`)
+  check('主页渲染出 4 张游戏卡片', cardCount === 4, `实际 ${cardCount}`)
   const cardNames = await evaluate(`[...document.querySelectorAll('.card-name')].map(e => e.textContent).join('|')`)
-  check('卡片包含贪吃蛇、游龙52式与 2048', cardNames === '贪吃蛇|游龙52式|2048', cardNames)
+  check('卡片包含四款游戏', cardNames === '贪吃蛇|游龙52式|2048|扫雷', cardNames)
   const homeHash = await evaluate(`window.location.hash`)
   check('初始路由为空（视作主页）', homeHash === '', `hash=${homeHash}`)
   await shot('01-home.png')
@@ -255,25 +255,81 @@ try {
   check('方块与网格格严格对齐', alignment === 'aligned', alignment)
   await shot('05-2048.png')
 
-  // 滑动操控
+  // 滑动操控：四个方向各滑一次。单个方向可能被堵住（2048 会忽略无效移动），
+  // 所以不能断言某一次滑动一定改变棋盘 —— 只要有一个方向生效即可
   const beforeSwipe = await evaluate(readBoard)
-  await evaluate(`(() => {
-    const board = document.getElementById('board')
-    const down = new MouseEvent('pointerdown', {clientX: 100, clientY: 100, bubbles: true})
-    const up = new MouseEvent('pointerup', {clientX: 100, clientY: 180, bubbles: true})
-    board.dispatchEvent(down)
-    board.dispatchEvent(up)
-  })()`)
-  await sleep(220)
+  const swipes = [
+    [100, 100, 100, 180],
+    [180, 100, 100, 100],
+    [100, 180, 100, 100],
+    [100, 100, 180, 100]
+  ]
+  for (const [x1, y1, x2, y2] of swipes) {
+    await evaluate(`(() => {
+      const board = document.getElementById('board')
+      board.dispatchEvent(new MouseEvent('pointerdown', {clientX: ${x1}, clientY: ${y1}, bubbles: true}))
+      board.dispatchEvent(new MouseEvent('pointerup', {clientX: ${x2}, clientY: ${y2}, bubbles: true}))
+    })()`)
+    await sleep(220)
+  }
   const afterSwipe = await evaluate(readBoard)
-  check('滑动操控生效', beforeSwipe !== afterSwipe)
+  check('滑动操控生效', beforeSwipe !== afterSwipe, `before=${beforeSwipe} after=${afterSwipe}`)
 
   await evaluate(`document.getElementById('backBtn').click()`)
   await sleep(400)
   const theme2048Off = await evaluate(`!document.body.classList.contains('theme-2048')`)
   check('返回主页后 2048 主题已移除', theme2048Off === true)
 
-  // ========== 12. 全程无异常 ==========
+  // ========== 12. 扫雷 ==========
+  await evaluate(`window.location.hash = '#/minesweeper'`)
+  await sleep(500)
+  const msMounted = await evaluate(`!!document.querySelector('#gameContent .ms')`)
+  check('扫雷挂载成功', msMounted === true)
+  const msTheme = await evaluate(`document.body.classList.contains('theme-minesweeper')`)
+  check('扫雷应用 theme-minesweeper 主题', msTheme === true)
+  const easyCells = await evaluate(`document.querySelectorAll('.ms-cell').length`)
+  check('初级棋盘 81 格', easyCells === 81, `实际 ${easyCells}`)
+  const minesCounter = await evaluate(`document.querySelector('#hudSlot .gs-hud-value')?.textContent || ''`)
+  check('雷数计数显示 10', minesCounter === '10', `mines=${minesCounter}`)
+
+  // 首击：必定安全，且会翻开一片
+  await evaluate(`(() => {
+    const cell = document.querySelector('.ms-cell')
+    cell.dispatchEvent(new MouseEvent('pointerdown', {bubbles: true, button: 0}))
+    cell.dispatchEvent(new MouseEvent('pointerup', {bubbles: true, button: 0}))
+  })()`)
+  await sleep(300)
+  const revealedCount = await evaluate(`document.querySelectorAll('.ms-cell--revealed').length`)
+  check('首击翻开了一片区域', revealedCount > 0, `翻开 ${revealedCount} 格`)
+  const hitMine = await evaluate(`document.querySelectorAll('.ms-cell--hit').length`)
+  check('首击不会踩到雷', hitMine === 0, `踩雷 ${hitMine} 处`)
+
+  // 右键插旗
+  await evaluate(`(() => {
+    const cells = [...document.querySelectorAll('.ms-cell:not(.ms-cell--revealed)')]
+    cells[0].dispatchEvent(new MouseEvent('contextmenu', {bubbles: true, cancelable: true}))
+  })()`)
+  await sleep(200)
+  const flagCount = await evaluate(`document.querySelectorAll('.ms-cell--flag').length`)
+  check('右键可以插旗', flagCount === 1, `旗子 ${flagCount} 面`)
+  const minesAfterFlag = await evaluate(`document.querySelector('#hudSlot .gs-hud-value')?.textContent || ''`)
+  check('插旗后雷数减一', minesAfterFlag === '9', `mines=${minesAfterFlag}`)
+  await shot('06-minesweeper.png')
+
+  // 切换到中级：棋盘变成 16×16
+  await evaluate(`document.querySelector('.ms-level[data-level="normal"]').click()`)
+  await sleep(300)
+  const normalCells = await evaluate(`document.querySelectorAll('.ms-cell').length`)
+  check('切换中级后棋盘 256 格', normalCells === 256, `实际 ${normalCells}`)
+  const minesNormal = await evaluate(`document.querySelector('#hudSlot .gs-hud-value')?.textContent || ''`)
+  check('中级雷数显示 40', minesNormal === '40', `mines=${minesNormal}`)
+
+  await evaluate(`document.getElementById('backBtn').click()`)
+  await sleep(400)
+  const msThemeOff = await evaluate(`!document.body.classList.contains('theme-minesweeper')`)
+  check('返回主页后扫雷主题已移除', msThemeOff === true)
+
+  // ========== 13. 全程无异常 ==========
   check('全程无未捕获异常', exceptions.length === 0, exceptions.join(' || '))
   check('全程无 console.error', consoleErrors.length === 0, consoleErrors.join(' || '))
 } catch (err) {

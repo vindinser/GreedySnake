@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Browser mini-game collection (currently: Greedy Snake, 游龙52式, 2048) — TypeScript + webpack, no backend, no framework. DOM manipulation via `document.querySelector` and `offsetLeft/offsetTop`.
+Browser mini-game collection (currently: Greedy Snake, 游龙52式, 2048, 扫雷) — TypeScript + webpack, no backend, no framework. DOM manipulation via `document.querySelector` and `offsetLeft/offsetTop`.
 
 ## Quick Start
 
@@ -58,6 +58,10 @@ Every game builds on these instead of re-implementing timers, input, audio and p
 | `src/games/game2048/logic.ts` | 2048 board logic as pure functions (move / merge / dead-board) — no DOM, unit-testable |
 | `src/games/game2048/Game2048.ts` | 2048 controller: rendering, input, SFX, high score |
 | `src/games/game2048/style.less` | 2048 styles (imported by the module, amber theme) |
+| `src/games/minesweeper/index.ts` | 扫雷 game module: injects the board template, declares `theme: 'minesweeper'` |
+| `src/games/minesweeper/logic.ts` | 扫雷 board logic as pure functions (mine placement / flood-fill reveal / flagging / win check) |
+| `src/games/minesweeper/Minesweeper.ts` | 扫雷 controller: rendering, pointer input, timer, high scores |
+| `src/games/minesweeper/style.less` | 扫雷 styles (imported by the module, steel-blue theme) |
 
 Four classes in `src/moduls/` (note: directory is misspelled as "moduls"):
 
@@ -118,7 +122,7 @@ export class Game {
 - **Directions**: normalised to `up`/`down`/`left`/`right` by `core/input`; the d-pad buttons carry `data-dir="up|down|left|right"`.
 - **High scores**: persisted via `core/storage` under `gs:snake.best`, `gs:dragon52.best` and `gs:2048.best`, and shown through `createHud`.
 - **Board games**: keep the rules in a separate pure module (e.g. `src/games/game2048/logic.ts`) and let the controller own only DOM, input, audio and storage. Pure rules get cheap, thorough unit tests; the controller stays thin.
-- **Turn-based games do not need a game loop**: only games with continuous motion start a `GameLoop`. The smoke test measures timer leaks against a per-mount baseline, not an absolute count.
+- **Turn-based games do not need a game loop**: only games with continuous motion start a `GameLoop`. The smoke test measures timer leaks against a per-mount baseline, not an absolute count. A timed board game (扫雷) uses the loop purely as a stopwatch — the loop's tab-hide auto-pause then pauses the clock for free.
 
 ## Toolchain
 
@@ -136,6 +140,7 @@ export class Game {
 - `test/core.test.ts` — unit tests for `storage` / `dispose` / `loop` / `input` / `audio`
 - `test/ui.test.ts` — unit tests for the shared UI components
 - `test/games-2048.test.ts` — unit tests for the 2048 board rules (merge, one-merge-per-line, no mutation of the input board, dead-board detection)
+- `test/games-minesweeper.test.ts` — unit tests for the 扫雷 board rules (mine count, first-click safety, flood-fill reveal, flagging, win check)
 - `test/smoke.test.ts` — mounts **every** game in the registry twice, asserting no exception and **no timers left behind** after `destroy()` (fake timers + `vi.getTimerCount()` compared against a per-mount baseline)
 - `scripts/e2e.mjs` — zero-dependency CDP script driving headless Chromium over `dist/`: routing, deep links, browser back, theme switching, score persistence, 2048 tile alignment, and a clean console
 

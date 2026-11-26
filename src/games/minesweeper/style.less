@@ -1,0 +1,277 @@
+// 扫雷：主题与棋盘样式
+
+// ===== 主题（钢蓝灰） =====
+// 主题类由外壳在挂载时加挂 body.theme-minesweeper，退出时移除
+body.theme-minesweeper {
+  --gs-accent: #7fb3d5;
+  --gs-accent-dark: #4a7d9e;
+  --gs-accent-soft: rgba(127, 179, 213, 0.5);
+  --gs-surface: #2c3a48;
+  --gs-border: #56697a;
+  --gs-text: #dce6ef;
+  --gs-text-dim: #93a6b6;
+
+  background: linear-gradient(135deg, #141c24 0%, #233240 50%, #33475a 100%);
+
+  // 扫雷棋盘比其它游戏宽，标题条跟着加宽
+  .game-bar {
+    width: min(566px, 100%);
+    background: linear-gradient(180deg, #5b7a93 0%, #3c5266 100%);
+    border-color: #7b97ad;
+  }
+
+  .back-btn {
+    color: #10202c;
+    background: linear-gradient(180deg, #d6e6f2 0%, #9fbdd3 100%);
+    border-color: #c3dcee;
+  }
+
+  .game-bar-title {
+    color: #fff;
+    text-shadow: 0 0 10px rgba(127, 179, 213, 0.6);
+  }
+}
+
+// ===== 面板 =====
+.ms {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  padding: 14px;
+  background: linear-gradient(180deg, #2a3a49 0%, #1d2933 100%);
+  border: 2px solid #4a5f72;
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 3px rgba(0, 0, 0, 0.5),
+    0 16px 40px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  user-select: none;
+}
+
+// ===== 顶部 =====
+.ms-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.ms-title {
+  font-size: 28px;
+  font-weight: bold;
+  letter-spacing: 4px;
+  line-height: 1.1;
+  color: #9ccbe8;
+  text-shadow:
+    0 0 12px rgba(127, 179, 213, 0.5),
+    0 0 28px rgba(127, 179, 213, 0.25);
+}
+
+.ms-sub {
+  margin-top: 3px;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: #7d93a5;
+}
+
+.ms-hud {
+  padding-top: 2px;
+
+  .gs-hud {
+    gap: 12px;
+  }
+
+  .gs-hud-cell {
+    font-size: 11px;
+  }
+
+  .gs-hud-value {
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 10px rgba(127, 179, 213, 0.45);
+  }
+}
+
+// ===== 难度切换 =====
+.ms-levels {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+
+  .gs-btn {
+    padding: 5px 12px;
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+}
+
+.ms-level--active {
+  color: #10202c !important;
+  background: linear-gradient(180deg, #9ccbe8 0%, #5f92b3 100%) !important;
+  border-color: #b8dcf0 !important;
+}
+
+.ms-flagmode--active {
+  color: #3a2a05 !important;
+  background: linear-gradient(180deg, #ffd98a 0%, #e0a83c 100%) !important;
+  border-color: #ffe9b8 !important;
+}
+
+// ===== 棋盘 =====
+.ms-board {
+  --ms-cell: 42px;
+  --ms-gap: 3px;
+
+  display: grid;
+  gap: var(--ms-gap);
+  width: fit-content;
+}
+
+.ms-board[data-level="easy"] {
+  --ms-cell: 42px;
+}
+
+.ms-board[data-level="normal"] {
+  --ms-cell: 26px;
+}
+
+.ms-board[data-level="hard"] {
+  --ms-cell: 15px;
+}
+
+// ===== 格子 =====
+.ms-cell {
+  width: var(--ms-cell);
+  height: var(--ms-cell);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  font-family: inherit;
+  font-weight: bold;
+  font-size: calc(var(--ms-cell) * 0.6);
+  line-height: 1;
+  color: #fff;
+  background: linear-gradient(180deg, #8ea4b8 0%, #5f7285 100%);
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.35),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  transition: filter 0.1s;
+
+  &:hover {
+    filter: brightness(1.12);
+  }
+
+  &:active {
+    filter: brightness(0.9);
+  }
+}
+
+.ms-cell--revealed {
+  background: #34424f;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.28);
+  cursor: default;
+
+  &:hover {
+    filter: none;
+  }
+
+  &:active {
+    filter: none;
+  }
+}
+
+// 数字配色
+.ms-cell--n1 { color: #6cb6ff; }
+.ms-cell--n2 { color: #5fd98a; }
+.ms-cell--n3 { color: #ff7b7b; }
+.ms-cell--n4 { color: #b5a6ff; }
+.ms-cell--n5 { color: #ffa96b; }
+.ms-cell--n6 { color: #6fe3d4; }
+.ms-cell--n7 { color: #e8e8e8; }
+.ms-cell--n8 { color: #9aa7b4; }
+
+// 插旗
+.ms-cell--flag {
+  color: #ffd166;
+}
+
+// 地雷
+.ms-cell--mine {
+  color: #ff5b5b;
+}
+
+// 踩中的那颗雷
+.ms-cell--hit {
+  background: #7d2323;
+  animation: ms-blast 0.5s ease-out;
+}
+
+@keyframes ms-blast {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
+// ===== 提示 =====
+.ms-hint {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #7d93a5;
+}
+
+// ===== 结算覆盖层 =====
+.ms-over {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 26px 22px;
+  text-align: center;
+}
+
+.ms-over-title {
+  font-size: 24px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  color: #9ccbe8;
+  text-shadow: 0 0 14px rgba(127, 179, 213, 0.55);
+}
+
+.ms-over-desc {
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: #a9bccb;
+}
+
+// ===== 窄屏适配 =====
+@media (max-width: 480px) {
+  .ms {
+    padding: 10px;
+  }
+
+  .ms-title {
+    font-size: 22px;
+  }
+
+  .ms-board[data-level="easy"] {
+    --ms-cell: 9vw;
+    --ms-gap: 1vw;
+  }
+
+  .ms-board[data-level="normal"] {
+    --ms-cell: 5vw;
+    --ms-gap: 0.8vw;
+  }
+
+  .ms-board[data-level="hard"] {
+    --ms-cell: 2.4vw;
+    --ms-gap: 0.7vw;
+  }
+}
