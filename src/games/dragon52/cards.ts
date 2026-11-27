@@ -1,26 +1,29 @@
 // 游龙52式：牌面数据
 // 一副牌 52 张：4 种花色 × A~K 13 个档位，强度由 A 到 K 递增
+// 花色与档位的唯一定义在 src/ui/cardFace.ts（与记忆翻牌共用），这里只补上游龙52式特有的式子类型
 
-export type SuitKey = 'heart' | 'spade' | 'club' | 'diamond';
+import { CARD_RANKS, CARD_SUITS, CardSuit, SuitKey } from '../../ui/cardFace'
 
-export interface Suit {
-  key: SuitKey;
-  symbol: string;
-  name: string;
+export type { SuitKey } from '../../ui/cardFace'
+
+export interface Suit extends CardSuit {
   // 任务类型
   type: string;
   // true：由对方完成任务，抽牌方得分；false：抽牌方付出，对方得分
   opponentActs: boolean;
 }
 
-export const SUITS: Suit[] = [
-  { key: 'heart', symbol: '♥', name: '红桃', type: '真心话', opponentActs: true },
-  { key: 'spade', symbol: '♠', name: '黑桃', type: '大冒险', opponentActs: true },
-  { key: 'club', symbol: '♣', name: '梅花', type: '惩罚', opponentActs: false },
-  { key: 'diamond', symbol: '♦', name: '方块', type: '奖励', opponentActs: false }
-];
+// 每种花色对应的任务类型与归属
+const SUIT_TYPES: Record<SuitKey, { type: string; opponentActs: boolean }> = {
+  heart: { type: '真心话', opponentActs: true },
+  spade: { type: '大冒险', opponentActs: true },
+  club: { type: '惩罚', opponentActs: false },
+  diamond: { type: '奖励', opponentActs: false }
+};
 
-export const RANKS: string[] = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+export const SUITS: Suit[] = CARD_SUITS.map(suit => ({ ...suit, ...SUIT_TYPES[suit.key] }));
+
+export const RANKS: string[] = CARD_RANKS;
 
 // 红桃 · 真心话
 const HEART_TASKS: string[] = [

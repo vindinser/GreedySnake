@@ -1,0 +1,274 @@
+// 记忆翻牌：主题与牌阵样式
+
+// ===== 主题（墨绿绒面 + 金色） =====
+// 主题类由外壳在挂载时加挂 body.theme-memory，退出时移除
+body.theme-memory {
+  --gs-accent: #d4af6a;
+  --gs-accent-dark: #a8873f;
+  --gs-accent-soft: rgba(212, 175, 106, 0.5);
+  --gs-surface: #1d3b2c;
+  --gs-border: #4a6b57;
+  --gs-text: #eef3ee;
+  --gs-text-dim: #9db3a4;
+
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(212, 175, 106, 0.08) 0%, transparent 60%),
+    linear-gradient(135deg, #0e1f16 0%, #17372a 50%, #1f4a35 100%);
+
+  .game-bar {
+    background: linear-gradient(180deg, #4c7a61 0%, #2c5540 100%);
+    border-color: #6d9c81;
+  }
+
+  .back-btn {
+    color: #14261c;
+    background: linear-gradient(180deg, #e6d5a8 0%, #c2a468 100%);
+    border-color: #eddfbb;
+  }
+
+  .game-bar-title {
+    color: #fff;
+    text-shadow: 0 0 10px rgba(212, 175, 106, 0.6);
+  }
+}
+
+// ===== 面板 =====
+.mm {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  padding: 14px;
+  background: linear-gradient(180deg, #24493a 0%, #163024 100%);
+  border: 2px solid #3f6a53;
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 3px rgba(0, 0, 0, 0.5),
+    0 16px 40px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  user-select: none;
+}
+
+// ===== 顶部 =====
+.mm-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.mm-title {
+  font-size: 26px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  line-height: 1.1;
+  color: #e8d4a0;
+  text-shadow:
+    0 0 12px rgba(212, 175, 106, 0.5),
+    0 0 28px rgba(212, 175, 106, 0.25);
+}
+
+.mm-sub {
+  margin-top: 3px;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: #8fae9b;
+}
+
+.mm-hud {
+  padding-top: 2px;
+
+  .gs-hud {
+    gap: 12px;
+  }
+
+  .gs-hud-cell {
+    font-size: 11px;
+  }
+
+  .gs-hud-value {
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 10px rgba(212, 175, 106, 0.45);
+  }
+}
+
+// ===== 难度切换 =====
+.mm-levels {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+
+  .gs-btn {
+    padding: 5px 12px;
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+}
+
+.mm-level--active {
+  color: #14261c !important;
+  background: linear-gradient(180deg, #e8d4a0 0%, #bfa066 100%) !important;
+  border-color: #f2e5c4 !important;
+}
+
+// ===== 牌阵 =====
+.mm-grid {
+  --mm-card: 56px;
+  --mm-gap: 8px;
+
+  display: grid;
+  gap: var(--mm-gap);
+  width: fit-content;
+}
+
+.mm-grid[data-cols="4"] {
+  --mm-card: 56px;
+}
+
+.mm-grid[data-cols="5"] {
+  --mm-card: 52px;
+}
+
+.mm-grid[data-cols="6"] {
+  --mm-card: 48px;
+}
+
+// ===== 牌 =====
+// 3D 翻转：外层负责透视，内层负责旋转，正反两面用 backface-visibility 区分
+.mm-card {
+  width: var(--mm-card);
+  height: var(--mm-card);
+  padding: 0;
+  border: none;
+  background: none;
+  perspective: 600px;
+  cursor: pointer;
+}
+
+.mm-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.35s ease;
+}
+
+.mm-card--flipped .mm-card-inner {
+  transform: rotateY(180deg);
+}
+
+.mm-card-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+// 正面：牌面。默认绕 Y 轴转 180°，藏在背面后面，翻开时才转过来
+.mm-card-front {
+  transform: rotateY(180deg);
+  background: linear-gradient(180deg, #fdfbf5 0%, #f0ead9 100%);
+  border: 2px solid rgba(212, 175, 106, 0.55);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+
+  .gs-card-face {
+    gap: 4px;
+    font-size: calc(var(--mm-card) * 0.34);
+  }
+
+  .gs-card-face-symbol {
+    font-size: 1.1em;
+  }
+}
+
+// 背面：牌背。默认朝向观众
+.mm-card-back {
+  background:
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.07) 0 5px, transparent 5px 11px),
+    linear-gradient(180deg, #37705a 0%, #21503f 100%);
+  border: 2px solid rgba(212, 175, 106, 0.55);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.mm-card-back-mark {
+  font-size: calc(var(--mm-card) * 0.4);
+  color: rgba(232, 212, 160, 0.5);
+}
+
+// 已配对：淡出并加金色描边
+.mm-card--matched .mm-card-front {
+  background: linear-gradient(180deg, rgba(253, 251, 245, 0.5) 0%, rgba(240, 234, 217, 0.5) 100%);
+  box-shadow:
+    0 0 0 2px rgba(212, 175, 106, 0.75),
+    0 0 12px rgba(212, 175, 106, 0.35);
+  opacity: 0.75;
+}
+
+.mm-card--matched {
+  cursor: default;
+}
+
+// ===== 提示 =====
+.mm-hint {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #8fae9b;
+}
+
+// ===== 结算覆盖层 =====
+.mm-over {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 26px 22px;
+  text-align: center;
+}
+
+.mm-over-title {
+  font-size: 24px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  color: #e8d4a0;
+  text-shadow: 0 0 14px rgba(212, 175, 106, 0.55);
+}
+
+.mm-over-desc {
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: #b6c9bd;
+}
+
+// ===== 窄屏适配 =====
+@media (max-width: 480px) {
+  .mm {
+    padding: 10px;
+  }
+
+  .mm-title {
+    font-size: 20px;
+  }
+
+  .mm-grid {
+    --mm-gap: 5px;
+  }
+
+  .mm-grid[data-cols="4"] {
+    --mm-card: 16vw;
+  }
+
+  .mm-grid[data-cols="5"] {
+    --mm-card: 13vw;
+  }
+
+  .mm-grid[data-cols="6"] {
+    --mm-card: 11vw;
+  }
+}

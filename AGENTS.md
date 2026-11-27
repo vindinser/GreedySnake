@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Browser mini-game collection (currently: Greedy Snake, 游龙52式, 2048, 扫雷) — TypeScript + webpack, no backend, no framework. DOM manipulation via `document.querySelector` and `offsetLeft/offsetTop`.
+Browser mini-game collection (currently: Greedy Snake, 游龙52式, 2048, 扫雷, 翻牌配对) — TypeScript + webpack, no backend, no framework. DOM manipulation via `document.querySelector` and `offsetLeft/offsetTop`.
 
 ## Quick Start
 
@@ -62,6 +62,11 @@ Every game builds on these instead of re-implementing timers, input, audio and p
 | `src/games/minesweeper/logic.ts` | 扫雷 board logic as pure functions (mine placement / flood-fill reveal / flagging / win check) |
 | `src/games/minesweeper/Minesweeper.ts` | 扫雷 controller: rendering, pointer input, timer, high scores |
 | `src/games/minesweeper/style.less` | 扫雷 styles (imported by the module, steel-blue theme) |
+| `src/games/memory/index.ts` | 翻牌配对 game module: injects the board template, declares `theme: 'memory'` |
+| `src/games/memory/logic.ts` | 翻牌配对 deck + matching rules as pure functions |
+| `src/games/memory/Memory.ts` | 翻牌配对 controller: rendering, flip animation, move counting, high scores |
+| `src/games/memory/style.less` | 翻牌配对 styles (imported by the module, green-felt theme, 3D flip) |
+| `src/ui/cardFace.ts` | Shared card primitives — the single definition of suits and ranks, used by 游龙52式 and 翻牌配对 |
 
 Four classes in `src/moduls/` (note: directory is misspelled as "moduls"):
 
@@ -122,6 +127,8 @@ export class Game {
 - **Directions**: normalised to `up`/`down`/`left`/`right` by `core/input`; the d-pad buttons carry `data-dir="up|down|left|right"`.
 - **High scores**: persisted via `core/storage` under `gs:snake.best`, `gs:dragon52.best` and `gs:2048.best`, and shown through `createHud`.
 - **Board games**: keep the rules in a separate pure module (e.g. `src/games/game2048/logic.ts`) and let the controller own only DOM, input, audio and storage. Pure rules get cheap, thorough unit tests; the controller stays thin.
+- **Shared data belongs in `src/ui/`**: suits and ranks live once in `src/ui/cardFace.ts`; 游龙52式 imports them and adds its own task tables on top, 翻牌配对 renders them via `createCardFace()`. Never duplicate the suit definitions in a second game.
+- **3D flip cards**: the *back* of the card faces the viewer at rest (`transform: none`) and the *face* is pre-rotated `rotateY(180deg)`; flipping rotates the inner wrapper. Get this backwards and the game starts with every card face-up — the class names still look right, so verify with a hit test (`document.elementFromPoint`) rather than by reading the DOM classes.
 - **Turn-based games do not need a game loop**: only games with continuous motion start a `GameLoop`. The smoke test measures timer leaks against a per-mount baseline, not an absolute count. A timed board game (扫雷) uses the loop purely as a stopwatch — the loop's tab-hide auto-pause then pauses the clock for free.
 
 ## Toolchain
@@ -141,6 +148,7 @@ export class Game {
 - `test/ui.test.ts` — unit tests for the shared UI components
 - `test/games-2048.test.ts` — unit tests for the 2048 board rules (merge, one-merge-per-line, no mutation of the input board, dead-board detection)
 - `test/games-minesweeper.test.ts` — unit tests for the 扫雷 board rules (mine count, first-click safety, flood-fill reveal, flagging, win check)
+- `test/games-memory.test.ts` — unit tests for the 翻牌配对 deck rules (card count, each face appears exactly twice, matching)
 - `test/smoke.test.ts` — mounts **every** game in the registry twice, asserting no exception and **no timers left behind** after `destroy()` (fake timers + `vi.getTimerCount()` compared against a per-mount baseline)
 - `scripts/e2e.mjs` — zero-dependency CDP script driving headless Chromium over `dist/`: routing, deep links, browser back, theme switching, score persistence, 2048 tile alignment, and a clean console
 

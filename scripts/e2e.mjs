@@ -114,9 +114,9 @@ try {
 
   // ========== 1. 主页 ==========
   const cardCount = await evaluate(`document.querySelectorAll('.game-card').length`)
-  check('主页渲染出 4 张游戏卡片', cardCount === 4, `实际 ${cardCount}`)
+  check('主页渲染出 5 张游戏卡片', cardCount === 5, `实际 ${cardCount}`)
   const cardNames = await evaluate(`[...document.querySelectorAll('.card-name')].map(e => e.textContent).join('|')`)
-  check('卡片包含四款游戏', cardNames === '贪吃蛇|游龙52式|2048|扫雷', cardNames)
+  check('卡片包含五款游戏', cardNames === '贪吃蛇|游龙52式|2048|扫雷|翻牌配对', cardNames)
   const homeHash = await evaluate(`window.location.hash`)
   check('初始路由为空（视作主页）', homeHash === '', `hash=${homeHash}`)
   await shot('01-home.png')
@@ -329,7 +329,74 @@ try {
   const msThemeOff = await evaluate(`!document.body.classList.contains('theme-minesweeper')`)
   check('返回主页后扫雷主题已移除', msThemeOff === true)
 
-  // ========== 13. 全程无异常 ==========
+  // ========== 13. 记忆翻牌 ==========
+  await evaluate(`window.location.hash = '#/memory'`)
+  await sleep(500)
+  const mmMounted = await evaluate(`!!document.querySelector('#gameContent .mm')`)
+  check('记忆翻牌挂载成功', mmMounted === true)
+  const mmTheme = await evaluate(`document.body.classList.contains('theme-memory')`)
+  check('记忆翻牌应用 theme-memory 主题', mmTheme === true)
+  const easyCards = await evaluate(`document.querySelectorAll('.mm-card').length`)
+  check('简单难度 16 张牌', easyCards === 16, `实际 ${easyCards}`)
+
+  // 牌面初始必须朝下。用 elementFromPoint 命中测试看哪一面真的在最上层 ——
+  // 只看 flipped 类名发现不了 CSS 3D 正反面写反的问题
+  const visibleFace = (index) => evaluate(`(() => {
+    const card = document.querySelectorAll('.mm-card')[${index}]
+    const r = card.getBoundingClientRect()
+    const el = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+    const face = el ? el.closest('.mm-card-face') : null
+    return face ? face.className : 'none'
+  })()`)
+  const faceBefore = await visibleFace(0)
+  check('牌面初始朝下（显示牌背）', faceBefore.includes('mm-card-back'), faceBefore)
+
+  // 找出牌面相同的两张（配对判定必须基于真实牌面，不能基于下标）
+  const pair = await evaluate(`(() => {
+    const cards = [...document.querySelectorAll('.mm-card')]
+    const seen = {}
+    for (let i = 0; i < cards.length; i++) {
+      const key = cards[i].querySelector('.mm-card-front').textContent
+      if (seen[key] !== undefined) return [seen[key], i]
+      seen[key] = i
+    }
+    return null
+  })()`)
+  check('牌堆中存在可配对的牌', Array.isArray(pair), JSON.stringify(pair))
+
+  if (Array.isArray(pair)) {
+    // 先翻开第一张
+    await evaluate(`document.querySelectorAll('.mm-card')[${pair[0]}].click()`)
+    await sleep(250)
+    const flippedCount = await evaluate(`document.querySelectorAll('.mm-card--flipped').length`)
+    check('点按可以翻开牌面', flippedCount === 1, `翻开 ${flippedCount} 张`)
+    const faceAfter = await visibleFace(pair[0])
+    check('翻开后显示牌面（花色点数）', faceAfter.includes('mm-card-front'), faceAfter)
+
+    // 再翻开相同牌面的一张
+    await evaluate(`document.querySelectorAll('.mm-card')[${pair[1]}].click()`)
+    await sleep(300)
+    const matchedCount = await evaluate(`document.querySelectorAll('.mm-card--matched').length`)
+    check('相同牌面配对成功', matchedCount === 2, `配对 ${matchedCount} 张`)
+    const movesText = await evaluate(`document.querySelector('#hudSlot .gs-hud-value')?.textContent || ''`)
+    check('步数计数为 1', movesText === '1', `moves=${movesText}`)
+  }
+  await shot('07-memory.png')
+
+  // 切换到困难：24 张牌
+  await evaluate(`document.querySelectorAll('.mm-level')[2].click()`)
+  await sleep(300)
+  const hardCards = await evaluate(`document.querySelectorAll('.mm-card').length`)
+  check('切换困难后 24 张牌', hardCards === 24, `实际 ${hardCards}`)
+  const hardCols = await evaluate(`document.getElementById('grid').dataset.cols`)
+  check('困难难度为 6 列', hardCols === '6', `cols=${hardCols}`)
+
+  await evaluate(`document.getElementById('backBtn').click()`)
+  await sleep(400)
+  const mmThemeOff = await evaluate(`!document.body.classList.contains('theme-memory')`)
+  check('返回主页后记忆翻牌主题已移除', mmThemeOff === true)
+
+  // ========== 14. 全程无异常 ==========
   check('全程无未捕获异常', exceptions.length === 0, exceptions.join(' || '))
   check('全程无 console.error', consoleErrors.length === 0, consoleErrors.join(' || '))
 } catch (err) {

@@ -105,6 +105,26 @@
   text-shadow: 0 0 10px var(--gs-accent-soft, var(--gs-accent));
 }
 
+// ===== 共享牌面 =====
+// 花色 + 点数，记忆翻牌与游龙52式共用同一份花色定义（src/ui/cardFace.ts）
+.gs-card-face {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: bold;
+}
+
+.gs-card-face-symbol {
+  font-size: 1.15em;
+  line-height: 1;
+}
+
+.gs-card-face-rank {
+  font-size: 1em;
+  line-height: 1;
+  letter-spacing: 1px;
+}
+
 // ===== 载入占位 =====
 .gs-loading {
   display: flex;
