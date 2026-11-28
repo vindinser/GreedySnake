@@ -171,6 +171,110 @@ body {
   margin-top: 6px;
 }
 
+// ===== 特殊入口卡片（惊喜点点）：彩虹流光 + 呼吸光晕 + 角标缎带 =====
+.game-card--special {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  background: linear-gradient(110deg, #ff6b9d, #c44ce0, #6c5ce7, #ff6b9d);
+  background-size: 300% 100%;
+  border: none;
+  animation: special-card-flow 6s linear infinite, special-card-glow 1.6s ease-in-out infinite alternate;
+
+  &::before,
+  &::after {
+    content: '✦';
+    position: absolute;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow: 0 0 8px #fff;
+    pointer-events: none;
+    animation: special-card-twinkle 1.8s ease-in-out infinite;
+  }
+
+  &::before {
+    top: 6px;
+    left: 10px;
+  }
+
+  &::after {
+    right: 10px;
+    bottom: 6px;
+    animation-delay: 0.9s;
+  }
+
+  &:hover {
+    border-color: transparent;
+    box-shadow: 0 10px 28px rgba(255, 107, 157, 0.5);
+  }
+
+  .card-screen {
+    background: rgba(20, 8, 30, 0.55);
+    border-color: rgba(255, 255, 255, 0.35);
+    box-shadow: inset 0 0 14px rgba(255, 107, 157, 0.35);
+  }
+
+  .card-name {
+    color: #fff;
+    text-shadow: 0 0 12px rgba(255, 255, 255, 0.7);
+  }
+
+  .card-title {
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .card-desc {
+    color: rgba(255, 255, 255, 0.9);
+  }
+}
+
+// 右上角斜切缎带
+.card-ribbon {
+  position: absolute;
+  top: 14px;
+  right: -38px;
+  padding: 4px 40px;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #8a1c52;
+  background: linear-gradient(180deg, #ffe08a 0%, #ffb84d 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  transform: rotate(38deg);
+  overflow: hidden;
+
+  // 缎带上的高光扫过
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -60%;
+    width: 40%;
+    height: 100%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.85), transparent);
+    animation: special-card-sweep 2.4s ease-in-out infinite;
+  }
+}
+
+@keyframes special-card-flow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+@keyframes special-card-glow {
+  from { box-shadow: 0 0 12px rgba(255, 107, 157, 0.45), 0 0 24px rgba(108, 92, 231, 0.25); }
+  to { box-shadow: 0 0 26px rgba(255, 107, 157, 0.85), 0 0 48px rgba(196, 76, 224, 0.5); }
+}
+
+@keyframes special-card-twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.7); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes special-card-sweep {
+  0% { left: -60%; }
+  60%, 100% { left: 130%; }
+}
+
 .home-bottom {
   text-align: center;
   color: #555;

@@ -43,6 +43,11 @@ class App {
     games.forEach(game => {
       const card = document.createElement('button');
       card.className = 'game-card';
+      // 特殊入口（惊喜点点）：用一套花里胡哨的样式单独渲染
+      if (game.special) {
+        card.classList.add('game-card--special');
+        card.dataset.special = game.id;
+      }
       card.innerHTML = `
         <div class="card-screen">${game.icon}</div>
         <div class="card-info">
@@ -51,6 +56,12 @@ class App {
           <div class="card-desc">${game.description}</div>
         </div>
       `;
+      if (game.special) {
+        const ribbon = document.createElement('span');
+        ribbon.className = 'card-ribbon';
+        ribbon.textContent = '❤ 专属惊喜';
+        card.appendChild(ribbon);
+      }
       card.addEventListener('click', () => this.navigateToGame(game));
       this.gameList.appendChild(card);
     });

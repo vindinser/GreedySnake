@@ -1,0 +1,1123 @@
+// 惊喜点点：生日主题样式（粉色夜空 + 蛋糕 + 追逐按钮 + 告白信）
+
+// ===== 主题（粉色夜空） =====
+// 主题类由外壳在挂载时加挂 body.theme-surprise，退出时移除
+body.theme-surprise {
+  --gs-accent: #ff6b9d;
+  --gs-accent-dark: #d81e5b;
+  --gs-accent-soft: rgba(255, 107, 157, 0.5);
+  --gs-surface: #3a1024;
+  --gs-border: #ff9ec0;
+  --gs-text: #ffe3ea;
+  --gs-text-dim: #d9a3b2;
+
+  background:
+    radial-gradient(ellipse at 50% -10%, rgba(255, 107, 157, 0.18) 0%, transparent 55%),
+    linear-gradient(160deg, #1b0530 0%, #3d0b3f 45%, #6d1152 100%);
+
+  .game-bar {
+    background: linear-gradient(180deg, #ff7aa2 0%, #d81e5b 100%);
+    border-color: #ff9ec0;
+  }
+
+  .back-btn {
+    color: #4a0d26;
+    background: linear-gradient(180deg, #ffe3ea 0%, #ffb3c8 100%);
+    border-color: #ffd6e2;
+  }
+
+  .game-bar-title {
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+  }
+}
+
+// ===== 舞台 =====
+.sp-stage {
+  position: relative;
+  width: 420px;
+  max-width: 100%;
+  min-height: 580px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 22px;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 2px solid rgba(255, 158, 192, 0.35);
+  background:
+    radial-gradient(ellipse at 50% 118%, rgba(255, 209, 102, 0.14) 0%, transparent 55%),
+    linear-gradient(180deg, rgba(43, 7, 60, 0.55) 0%, rgba(109, 17, 82, 0.35) 100%);
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+// ===== 夜空：星星与气球 =====
+.sp-sky {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.sp-star {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.9);
+  animation: sp-star-twinkle 2.4s ease-in-out infinite;
+}
+
+.sp-balloon {
+  position: absolute;
+  width: 32px;
+  height: 42px;
+  border-radius: 50% 50% 50% 50% / 56% 56% 44% 44%;
+  animation: sp-balloon-sway 5s ease-in-out infinite;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    width: 1px;
+    height: 26px;
+    background: rgba(255, 255, 255, 0.35);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 7px;
+    left: 7px;
+    width: 8px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.35);
+  }
+}
+
+.sp-balloon--a {
+  left: 5%;
+  top: 210px;
+  background: radial-gradient(circle at 32% 28%, #ff8fab, #e64980);
+}
+
+.sp-balloon--b {
+  left: 80%;
+  top: 120px;
+  background: radial-gradient(circle at 32% 28%, #b197fc, #7048e8);
+  animation-delay: 1.2s;
+}
+
+.sp-balloon--c {
+  left: 89%;
+  top: 260px;
+  width: 24px;
+  height: 32px;
+  background: radial-gradient(circle at 32% 28%, #ffe066, #f59f00);
+  animation-delay: 2.4s;
+}
+
+// ===== 生日蛋糕 =====
+.sp-cake {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  z-index: 1;
+  transform: translateX(-50%);
+  width: 150px;
+  text-align: center;
+  transition: filter 0.6s;
+}
+
+.sp-candles {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+}
+
+.sp-candle {
+  position: relative;
+  width: 5px;
+  height: 20px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #ff9ec0, #e64980);
+}
+
+.sp-flame {
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 9px;
+  height: 14px;
+  border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
+  background: radial-gradient(circle at 50% 70%, #fff7ae 0%, #ffd43b 45%, #ff922b 100%);
+  box-shadow:
+    0 0 12px rgba(255, 212, 59, 0.9),
+    0 0 26px rgba(255, 146, 43, 0.5);
+  animation: sp-flicker 0.28s infinite alternate;
+  transition: opacity 0.4s, transform 0.4s;
+}
+
+// 口令正确：吹灭蜡烛
+.sp-cake--out {
+  filter: brightness(0.78) saturate(0.85);
+
+  .sp-flame {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.2);
+    box-shadow: none;
+  }
+}
+
+.sp-layer {
+  margin: 0 auto;
+}
+
+.sp-layer--top {
+  width: 96px;
+  height: 24px;
+  border-radius: 10px 10px 4px 4px;
+  background: linear-gradient(180deg, #ffd6e0 0%, #ff9ec0 100%);
+  box-shadow: inset 0 -6px 0 rgba(255, 255, 255, 0.25);
+}
+
+.sp-layer--mid {
+  width: 128px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #c44ce0 0%, #8e2ec9 100%);
+  box-shadow: inset 0 -10px 0 rgba(255, 255, 255, 0.12);
+}
+
+.sp-cake-num {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-weight: bold;
+  font-size: 15px;
+  letter-spacing: 1px;
+  color: #ffe08a;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+}
+
+.sp-plate {
+  width: 150px;
+  height: 10px;
+  margin: 0 auto;
+  border-radius: 0 0 8px 8px;
+  background: linear-gradient(180deg, #e7d6ff, #b8a1d9);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+}
+
+// ===== 主标题 =====
+.sp-hero {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.sp-hero-kicker {
+  font-size: 9px;
+  letter-spacing: 4px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.sp-hero-title {
+  margin: 8px 0 6px;
+  font-size: 34px;
+  font-weight: bold;
+  letter-spacing: 6px;
+  background: linear-gradient(180deg, #fff 0%, #ffd6e0 35%, #ff6b9d 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 14px rgba(255, 107, 157, 0.55));
+  animation: sp-title-float 3.2s ease-in-out infinite;
+}
+
+.sp-hero-sub {
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: #ffc2d6;
+}
+
+// ===== 口令面板 =====
+.sp-panel {
+  position: relative;
+  z-index: 2;
+  width: min(300px, calc(100% - 36px));
+  padding: 18px 20px 14px;
+  border-radius: 16px;
+  text-align: center;
+  background: rgba(46, 10, 48, 0.72);
+  border: 1px solid rgba(255, 158, 192, 0.45);
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(6px);
+  transition: opacity 0.4s, transform 0.4s, visibility 0.4s;
+}
+
+// 口令正确后面板退场
+.sp-panel--gone {
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.9);
+}
+
+.sp-panel--shake {
+  animation: sp-shake 0.45s;
+}
+
+.sp-panel-title {
+  font-size: 15px;
+  letter-spacing: 3px;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(255, 107, 157, 0.6);
+}
+
+.sp-panel-hint {
+  margin: 6px 0 12px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: rgba(255, 194, 214, 0.75);
+}
+
+.sp-panel-row {
+  display: flex;
+  justify-content: center;
+}
+
+.sp-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  letter-spacing: 2px;
+  color: #fff;
+  background: rgba(20, 4, 26, 0.7);
+  border: 1px solid rgba(255, 158, 192, 0.5);
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:focus {
+    border-color: #ff6b9d;
+    box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.25);
+  }
+
+  &::placeholder {
+    font-weight: normal;
+    color: rgba(255, 194, 214, 0.45);
+    letter-spacing: 1px;
+  }
+}
+
+.sp-error {
+  min-height: 18px;
+  margin: 8px 0 2px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #ff8fa3;
+}
+
+.sp-retry-row {
+  margin-top: 4px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s;
+}
+
+.sp-retry-row--show {
+  opacity: 1;
+  visibility: visible;
+}
+
+// 提交口令按钮：在共享按钮基础上换一套粉色渐变
+.sp-stage .sp-submit {
+  width: 100%;
+  padding: 10px 0;
+  font-size: 14px;
+  letter-spacing: 4px;
+  color: #fff;
+  background: linear-gradient(180deg, #ff8fab 0%, #e64980 100%);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 10px;
+  box-shadow:
+    0 6px 16px rgba(230, 73, 128, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+
+  &:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+  }
+}
+
+// 重新输入口令：虚线小按钮，退路但不抢戏
+.sp-stage .sp-retry {
+  padding: 5px 14px;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #ffc2d6;
+  background: transparent;
+  border: 1px dashed rgba(255, 194, 214, 0.5);
+  border-radius: 8px;
+  box-shadow: none;
+
+  &:hover {
+    color: #fff;
+    border-color: #ffc2d6;
+  }
+}
+
+// ===== 追逐按钮 =====
+.sp-chase-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.sp-chase {
+  position: absolute;
+  pointer-events: auto;
+  padding: 12px 22px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: #fff;
+  white-space: nowrap;
+  background: linear-gradient(135deg, #ff6b9d 0%, #c44ce0 100%);
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  border-radius: 999px;
+  box-shadow:
+    0 8px 22px rgba(255, 107, 157, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0);
+  transition: opacity 0.18s, transform 0.18s, filter 0.12s;
+
+  &:hover {
+    filter: brightness(1.12);
+  }
+
+  &:active {
+    transform: scale(0.94);
+  }
+}
+
+.sp-chase--in {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.sp-chase--hide {
+  opacity: 0;
+  transform: scale(0.35);
+}
+
+// ===== 告白第一幕：礼物盒 =====
+// 进入告白时舞台整体让位：标题淡成背景
+.sp-stage--gift .sp-hero {
+  opacity: 0.12;
+}
+
+.sp-gift {
+  position: absolute;
+  left: 50%;
+  top: 34%;
+  z-index: 3;
+  width: 120px;
+  height: 108px;
+  transform: translate(-50%, -50%) scale(0);
+  pointer-events: none;
+}
+
+.sp-gift--show {
+  animation: sp-gift-drop 1.1s cubic-bezier(0.25, 0.9, 0.3, 1.25) forwards;
+}
+
+.sp-gift-box {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 76px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ff8fab 0%, #e64980 100%);
+  box-shadow:
+    0 10px 24px rgba(230, 73, 128, 0.45),
+    inset 0 2px 0 rgba(255, 255, 255, 0.35);
+  transform-origin: 50% 100%;
+}
+
+.sp-gift-ribbon {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 18px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, #ffe066, #f59f00);
+}
+
+.sp-gift-lid {
+  position: absolute;
+  left: -6px;
+  right: -6px;
+  top: 14px;
+  height: 22px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #ffb3c8, #ff8fab);
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.sp-gift-bow {
+  position: absolute;
+  left: 50%;
+  top: -4px;
+  width: 36px;
+  height: 20px;
+  transform: translateX(-50%);
+  background:
+    radial-gradient(circle at 26% 50%, #ffe066 0 8px, transparent 9px),
+    radial-gradient(circle at 74% 50%, #ffe066 0 8px, transparent 9px),
+    radial-gradient(circle at 50% 55%, #ffd43b 0 5px, transparent 6px);
+}
+
+// 炸开：盖子飞走、盒身炸没
+.sp-gift--open {
+  .sp-gift-lid {
+    animation: sp-gift-lid-fly 0.7s ease-in forwards;
+  }
+
+  .sp-gift-bow {
+    animation: sp-gift-bow-fly 0.7s ease-in forwards;
+  }
+
+  .sp-gift-box {
+    animation: sp-gift-box-burst 0.5s ease-in forwards;
+  }
+}
+
+// 掉落前先摇一摇
+.sp-gift--shake {
+  .sp-gift-box,
+  .sp-gift-lid,
+  .sp-gift-bow {
+    animation: sp-gift-shake 0.7s ease-in-out;
+  }
+}
+
+// ===== 告白第一幕：信封 =====
+.sp-envelope-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.sp-envelope {
+  position: absolute;
+  width: 88px;
+  height: 60px;
+  pointer-events: auto;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0);
+  transition: opacity 0.25s, transform 0.25s;
+}
+
+.sp-envelope--in {
+  opacity: 1;
+  transform: scale(1);
+}
+
+// 点中后：其余信封退场
+.sp-envelope--dim {
+  opacity: 0;
+  transform: scale(0.55);
+  pointer-events: none;
+}
+
+// 被点中的信封：翻开 flaps
+.sp-envelope--open {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: none;
+}
+
+.sp-env-inner {
+  position: absolute;
+  inset: 0;
+  animation: sp-env-float 2.8s ease-in-out infinite;
+}
+
+.sp-env-body {
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #fff0f3 0%, #ffd6e0 100%);
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.sp-env-flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 26px;
+  background: linear-gradient(180deg, #ff8fab, #e64980);
+  border-radius: 6px 6px 0 0;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  transform-origin: top center;
+  transition: transform 0.5s;
+}
+
+.sp-envelope--open .sp-env-flap {
+  transform: rotateX(178deg);
+}
+
+.sp-env-seal {
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  transform: translate(-50%, -50%);
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: #fff;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ff6b9d, #c9184a);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+// 信封阶段的提示语
+.sp-env-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 132px;
+  z-index: 3;
+  transform: translateX(-50%);
+  padding: 6px 16px;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: #ffd6e0;
+  white-space: nowrap;
+  background: rgba(43, 7, 60, 0.55);
+  border: 1px solid rgba(255, 214, 224, 0.35);
+  border-radius: 999px;
+  opacity: 0;
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+
+.sp-env-hint--show {
+  opacity: 1;
+  animation: sp-hint-pulse 1.6s ease-in-out infinite;
+}
+
+// ===== 告白信 =====
+.sp-letter {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 30px 26px;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(43, 7, 60, 0.92) 0%, rgba(109, 17, 82, 0.92) 100%);
+  backdrop-filter: blur(4px);
+  border-radius: 16px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.6s;
+}
+
+.sp-letter--show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.sp-letter-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.sp-letter-badge {
+  padding: 4px 12px;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #ffd6e0;
+  border: 1px solid rgba(255, 214, 224, 0.5);
+  border-radius: 999px;
+}
+
+.sp-letter-badge--alt {
+  color: #ffe08a;
+  border-color: rgba(255, 224, 138, 0.55);
+}
+
+.sp-letter-title {
+  font-size: 22px;
+  font-weight: bold;
+  letter-spacing: 4px;
+  background: linear-gradient(180deg, #fff 0%, #ffd6e0 40%, #ff6b9d 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 10px rgba(255, 107, 157, 0.5));
+}
+
+.sp-letter-body {
+  width: 100%;
+  max-width: 320px;
+  font-size: 14px;
+  line-height: 2;
+  letter-spacing: 1px;
+  color: #ffe3ea;
+  transition: opacity 0.6s;
+}
+
+.sp-letter-p {
+  margin: 0;
+  animation: sp-p-in 0.5s ease both;
+}
+
+// 读信进度：第 X 封 / 共 Y 封
+.sp-letter-count {
+  min-height: 16px;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: #ffc2d6;
+}
+
+// 读完一封到下一封之间：正文淡成背景，让位给飘雪
+.sp-letter--gap .sp-letter-body {
+  opacity: 0.2;
+}
+
+// 压卷大情书：篇幅最大，排版也最郑重（金色标题 + 更疏朗的行距）
+.sp-letter--grand .sp-letter-title {
+  font-size: 24px;
+  background: linear-gradient(180deg, #fff 0%, #ffe08a 45%, #ffb84d 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.sp-letter--grand .sp-letter-body {
+  max-width: 340px;
+  font-size: 15px;
+  line-height: 2.1;
+}
+
+// ===== 背景音乐开关 =====
+.sp-bgm-row {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 7;
+}
+
+.sp-stage .sp-bgm {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  line-height: 1;
+  color: #ffd6e0;
+  background: rgba(43, 7, 60, 0.55);
+  border: 1px solid rgba(255, 214, 224, 0.4);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, transform 0.15s, opacity 0.2s;
+
+  &:hover {
+    color: #fff;
+    border-color: #ffd6e0;
+    transform: scale(1.08);
+  }
+}
+
+// 音乐播放中：按钮随节奏微微呼吸
+.sp-bgm:not(.sp-bgm--off) {
+  animation: sp-bgm-pulse 2.4s ease-in-out infinite;
+}
+
+// 关闭状态：变暗 + 一道斜线
+.sp-bgm--off {
+  opacity: 0.45;
+
+  &::after {
+    content: '';
+    position: absolute;
+    width: 22px;
+    height: 1.5px;
+    background: #ff8fa3;
+    transform: rotate(-45deg);
+  }
+}
+
+@keyframes sp-bgm-pulse {
+  0%, 100% { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); }
+  50% { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 12px rgba(255, 214, 224, 0.55); }
+}
+
+.sp-letter-sign {
+  align-self: flex-end;
+  margin-right: 6%;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: #ffc2d6;
+}
+
+// ===== 告白终场：我们的时间线 + 生日祝福 =====
+.sp-finale {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 22px 22px 0;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(43, 7, 60, 0.93) 0%, rgba(109, 17, 82, 0.9) 100%);
+  backdrop-filter: blur(5px);
+  border-radius: 16px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.6s;
+}
+
+.sp-finale--show {
+  opacity: 1;
+  visibility: visible;
+}
+
+// 终场雪景：铺在内容下面，内容浮在夜色上
+.sp-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.sp-finale > *:not(.sp-scene) {
+  position: relative;
+  z-index: 1;
+}
+
+.sp-finale-title {
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 4px;
+  color: #ffd6e0;
+  text-shadow: 0 0 10px rgba(255, 107, 157, 0.5);
+}
+
+.sp-timeline {
+  position: relative;
+  width: 100%;
+  max-width: 310px;
+  text-align: left;
+}
+
+// 时间线竖线
+.sp-timeline::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 12px;
+  bottom: 12px;
+  width: 2px;
+  border-radius: 1px;
+  background: linear-gradient(180deg, rgba(255, 212, 59, 0.7), rgba(255, 107, 157, 0.7));
+}
+
+.sp-tl-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0 4px 18px;
+  opacity: 0;
+  transform: translateX(-12px);
+  animation: sp-tl-in 0.5s ease forwards;
+}
+
+.sp-tl-dot {
+  position: absolute;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ffd43b;
+  box-shadow: 0 0 8px rgba(255, 212, 59, 0.9);
+}
+
+.sp-tl-date {
+  flex: none;
+  width: 122px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #ffc2d6;
+}
+
+.sp-tl-event {
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: #fff;
+}
+
+.sp-finale-wish {
+  margin-top: 10px;
+  font-size: 24px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  background: linear-gradient(180deg, #fff 0%, #ffd6e0 40%, #ff6b9d 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 12px rgba(255, 107, 157, 0.6));
+  animation: sp-title-float 3.2s ease-in-out infinite;
+}
+
+.sp-finale-sub {
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: #ffd6e0;
+}
+
+// ===== 终场雪景细节 =====
+// 月亮光晕轻轻呼吸
+.sp-scene-moonglow {
+  animation: sp-moon-pulse 5s ease-in-out infinite;
+}
+
+// 脚印一个一个浮现，像刚刚走过来
+.sp-print {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sp-print-in 0.5s ease both;
+}
+
+// 一家三口：月光下的剪影，微微摇晃，像边走边笑
+.sp-scene-family {
+  filter: drop-shadow(-2px -2px 5px rgba(255, 214, 224, 0.35));
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: sp-family-sway 7s ease-in-out infinite;
+}
+
+@keyframes sp-moon-pulse {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 1; }
+}
+
+@keyframes sp-print-in {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+
+@keyframes sp-family-sway {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  50% { transform: translateX(1.5px) rotate(0.4deg); }
+}
+
+// ===== 漂浮爱心 =====
+.sp-hearts {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.sp-heart {
+  position: absolute;
+  bottom: -28px;
+  opacity: 0;
+  text-shadow: 0 0 8px currentColor;
+  animation: sp-heart-float 4s ease-in infinite;
+}
+
+// ===== 常驻雪花：她喜欢雪，舞台一直下雪 =====
+.sp-snow {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.sp-flake {
+  position: absolute;
+  top: -14px;
+  color: #fff;
+  opacity: var(--flake-opacity, 0.8);
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.9);
+  animation: sp-snow-fall linear infinite;
+  will-change: transform;
+}
+
+// ===== 粒子：火花与撒花 =====
+.sp-spark {
+  position: absolute;
+  z-index: 7;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: sp-spark-fly 0.72s ease-out forwards;
+}
+
+.sp-confetti {
+  position: absolute;
+  z-index: 7;
+  top: -16px;
+  width: 8px;
+  height: 12px;
+  border-radius: 2px;
+  pointer-events: none;
+  animation: sp-confetti-fall 3s linear forwards;
+}
+
+// ===== 关键帧 =====
+@keyframes sp-star-twinkle {
+  0%, 100% { opacity: 0.15; transform: scale(0.7); }
+  50% { opacity: 0.95; transform: scale(1.2); }
+}
+
+@keyframes sp-balloon-sway {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-14px) rotate(4deg); }
+}
+
+@keyframes sp-flicker {
+  from { transform: translateX(-50%) scale(1) rotate(-3deg); }
+  to { transform: translateX(-50%) scale(1.12) rotate(3deg); }
+}
+
+@keyframes sp-title-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes sp-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-7px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(3px); }
+}
+
+@keyframes sp-p-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sp-spark-fly {
+  from { opacity: 1; transform: translate(0, 0) scale(1); }
+  to { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.3); }
+}
+
+@keyframes sp-confetti-fall {
+  from { opacity: 1; transform: translateY(0) rotate(0); }
+  to { opacity: 0.9; transform: translateY(620px) rotate(680deg); }
+}
+
+@keyframes sp-heart-float {
+  0% { opacity: 0; transform: translateY(0) scale(0.6); }
+  12% { opacity: 1; }
+  80% { opacity: 0.8; }
+  100% { opacity: 0; transform: translateY(-560px) scale(1.15); }
+}
+
+// 礼物盒：从天而降，落地弹一下
+@keyframes sp-gift-drop {
+  0% { transform: translate(-50%, -50%) translateY(-560px) scale(0.5); opacity: 0; }
+  40% { opacity: 1; }
+  75% { transform: translate(-50%, -50%) translateY(0) scale(1.08, 0.92); }
+  88% { transform: translate(-50%, -50%) translateY(-14px) scale(0.96, 1.04); }
+  100% { transform: translate(-50%, -50%) translateY(0) scale(1); }
+}
+
+@keyframes sp-gift-shake {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(-7deg); }
+  40% { transform: rotate(6deg); }
+  60% { transform: rotate(-4deg); }
+  80% { transform: rotate(3deg); }
+}
+
+@keyframes sp-gift-lid-fly {
+  0% { transform: translateY(0) rotate(0); opacity: 1; }
+  100% { transform: translateY(-96px) rotate(36deg); opacity: 0; }
+}
+
+@keyframes sp-gift-bow-fly {
+  0% { transform: translateX(-50%) translateY(0) rotate(0); opacity: 1; }
+  100% { transform: translateX(-50%) translateY(-120px) rotate(-32deg); opacity: 0; }
+}
+
+@keyframes sp-gift-box-burst {
+  0% { transform: scale(1); opacity: 1; }
+  35% { transform: scale(1.22); opacity: 1; }
+  100% { transform: scale(0.2); opacity: 0; }
+}
+
+// 信封：轻轻浮动，吸引人去点
+@keyframes sp-env-float {
+  0%, 100% { transform: translateY(0) rotate(-1.5deg); }
+  50% { transform: translateY(-7px) rotate(1.5deg); }
+}
+
+@keyframes sp-hint-pulse {
+  0%, 100% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.05); }
+}
+
+// 雪花：一路飘一路摇
+@keyframes sp-snow-fall {
+  from { transform: translate(0, -14px) rotate(0deg); }
+  to { transform: translate(var(--snow-drift, 20px), 640px) rotate(360deg); }
+}
+
+// 时间线条目：从左滑入
+@keyframes sp-tl-in {
+  to { opacity: 1; transform: translateX(0); }
+}

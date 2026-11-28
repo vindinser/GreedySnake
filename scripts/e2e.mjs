@@ -107,7 +107,8 @@ try {
       consoleErrors.push(msg.params.args.map(a => a.value ?? a.description).join(' '))
     }
     if (msg.method === 'Runtime.exceptionThrown') {
-      exceptions.push(msg.params.exceptionDetails.exception?.description || 'unknown')
+      const d = msg.params.exceptionDetails
+      exceptions.push(d.exception?.description || d.text || JSON.stringify(d))
     }
   })
   await send('Runtime.enable')
@@ -116,15 +117,17 @@ try {
 
   // ========== 1. 主页 ==========
   const cardCount = await evaluate(`document.querySelectorAll('.game-card').length`)
-  check('主页渲染出 6 张游戏卡片', cardCount === 6, `实际 ${cardCount}`)
+  check('主页渲染出 7 张游戏卡片', cardCount === 7, `实际 ${cardCount}`)
   const cardNames = await evaluate(`[...document.querySelectorAll('.card-name')].map(e => e.textContent).join('|')`)
-  check('卡片包含六款游戏', cardNames === '贪吃蛇|游龙52式|2048|扫雷|翻牌配对|打砖块', cardNames)
+  check('卡片包含七款游戏', cardNames === '惊喜点点|贪吃蛇|游龙52式|2048|扫雷|翻牌配对|打砖块', cardNames)
+  const specialCard = await evaluate(`!!document.querySelector('.game-card--special[data-special="surprise"]') && !!document.querySelector('.game-card--special .card-ribbon')`)
+  check('惊喜点点是花里胡哨的特殊入口（带缎带）', specialCard === true)
   const homeHash = await evaluate(`window.location.hash`)
   check('初始路由为空（视作主页）', homeHash === '', `hash=${homeHash}`)
   await shot('01-home.png')
 
   // ========== 2. 点击进入贪吃蛇：路由与挂载 ==========
-  await evaluate(`document.querySelectorAll('.game-card')[0].click()`)
+  await evaluate(`document.querySelectorAll('.game-card')[1].click()`)
   await sleep(400)
   const snakeHash = await evaluate(`window.location.hash`)
   check('路由变为 #/snake', snakeHash === '#/snake', snakeHash)
@@ -178,7 +181,7 @@ try {
   // ========== 8. 游龙52式与主题 ==========
   await evaluate(`window.location.hash = '#/home'`)
   await sleep(300)
-  await evaluate(`document.querySelectorAll('.game-card')[1].click()`)
+  await evaluate(`document.querySelectorAll('.game-card')[2].click()`)
   await sleep(400)
   const dragonHash = await evaluate(`window.location.hash`)
   check('路由变为 #/dragon52', dragonHash === '#/dragon52', dragonHash)
@@ -479,7 +482,162 @@ try {
   const bkThemeOff = await evaluate(`!document.body.classList.contains('theme-breakout')`)
   check('返回主页后打砖块主题已移除', bkThemeOff === true)
 
-  // ========== 15. 全程无异常 ==========
+  // ========== 15. 惊喜点点：口令 → 追逐 → 告白 ==========
+  await evaluate(`window.location.hash = '#/home'`)
+  await sleep(400)
+  await evaluate(`document.querySelector('.game-card--special').click()`)
+  await sleep(600)
+  const spHash = await evaluate(`window.location.hash`)
+  check('路由变为 #/surprise', spHash === '#/surprise', `hash=${spHash}`)
+  const spTheme = await evaluate(`document.body.classList.contains('theme-surprise')`)
+  check('惊喜点点应用 theme-surprise 主题', spTheme === true)
+  const spMounted = await evaluate(`!!document.querySelector('#gameContent .sp-stage') && !!document.querySelector('#spInput')`)
+  check('生日舞台与口令输入框已渲染', spMounted === true)
+  await shot('09-surprise-password.png')
+
+  // 口令错误：出现嘲讽按钮，点了也只会一直刷新
+  await evaluate(`(() => {
+    const input = document.getElementById('spInput')
+    input.value = '猜错啦'
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+    document.querySelector('.sp-submit').click()
+  })()`)
+  await sleep(400)
+  const spWrong = await evaluate(`({
+    error: document.getElementById('spError').textContent,
+    chaseIn: document.querySelector('.sp-chase').classList.contains('sp-chase--in')
+  })`)
+  check('口令错误显示嘲讽文案', spWrong.error.length > 0, `error=${spWrong.error}`)
+  check('口令错误也甩出按钮', spWrong.chaseIn === true)
+  const spWrongLabelBefore = await evaluate(`document.querySelector('.sp-chase').textContent`)
+  await evaluate(`document.querySelector('.sp-chase').click()`)
+  await sleep(300)
+  const spWrongLabelAfter = await evaluate(`document.querySelector('.sp-chase').textContent`)
+  check('错误按钮点击后文案刷新', spWrongLabelBefore !== spWrongLabelAfter, `${spWrongLabelBefore} -> ${spWrongLabelAfter}`)
+  await shot('10-surprise-wrong.png')
+
+  // 重新输入，然后输入正确口令
+  await evaluate(`document.querySelector('.sp-retry').click()`)
+  await sleep(300)
+  await evaluate(`(() => {
+    const input = document.getElementById('spInput')
+    input.value = '么么儿'
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+    document.querySelector('.sp-submit').click()
+  })()`)
+  await sleep(1200)
+  const spUnlocked = await evaluate(`({
+    cakeOut: document.getElementById('spCake').classList.contains('sp-cake--out'),
+    panelGone: document.getElementById('spPanel').classList.contains('sp-panel--gone'),
+    chaseIn: document.querySelector('.sp-chase').classList.contains('sp-chase--in')
+  })`)
+  check('口令正确吹灭蜡烛并收起面板', spUnlocked.cakeOut && spUnlocked.panelGone, JSON.stringify(spUnlocked))
+  check('追逐按钮已出现', spUnlocked.chaseIn === true)
+
+  // 背景音乐：模拟用户第一次在舞台里交互（指针按下）后响起，可随时开关
+  await evaluate(`document.getElementById('spStage').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))`)
+  await sleep(300)
+  const bgmOn = await evaluate(`!document.querySelector('.sp-bgm').classList.contains('sp-bgm--off')`)
+  check('首次交互后背景音乐响起', bgmOn === true)
+  await evaluate(`document.querySelector('.sp-bgm').click()`)
+  await sleep(200)
+  const bgmOff = await evaluate(`document.querySelector('.sp-bgm').classList.contains('sp-bgm--off')`)
+  check('音乐开关可一键静音', bgmOff === true)
+  await evaluate(`document.querySelector('.sp-bgm').click()`)
+  await sleep(200)
+  const bgmOnAgain = await evaluate(`!document.querySelector('.sp-bgm').classList.contains('sp-bgm--off')`)
+  check('音乐开关可重新打开', bgmOnAgain === true)
+  await shot('11-surprise-chase.png')
+
+  // 追逐：最多十次，最后一次点击后掉落礼物
+  // 礼物从出现到炸开只有几秒窗口，检测兼容：礼物可见 / 正在炸开 / 信封已弹出 / 提示已出现
+  const spGiftState = () => evaluate(`(
+    document.getElementById('spGift').classList.contains('sp-gift--show') ||
+    document.getElementById('spGift').classList.contains('sp-gift--open') ||
+    document.querySelectorAll('.sp-envelope').length > 0 ||
+    document.getElementById('spEnvHint').classList.contains('sp-env-hint--show')
+  )`)
+  let spGiftShown = false
+  let spClicks = 0
+  for (let i = 0; i < 10; i++) {
+    await evaluate(`document.querySelector('.sp-chase').click()`)
+    spClicks++
+    await sleep(500)
+    spGiftShown = await spGiftState()
+    if (spGiftShown) break
+  }
+  // 真实浏览器里主线程可能被动画拖慢，礼物出现时机略有抖动：再轮询几秒
+  if (!spGiftShown) {
+    for (let i = 0; i < 10 && !spGiftShown; i++) {
+      await sleep(400)
+      spGiftShown = await spGiftState()
+    }
+  }
+  check(`追逐 ${spClicks} 次（十次以内）后掉落礼物`, spGiftShown === true, `clicks=${spClicks}`)
+  await sleep(1000)
+  await shot('12-surprise-gift.png')
+
+  // 礼物炸开，蹦出信封
+  await sleep(2200)
+  const spEnvelopes = await evaluate(`document.querySelectorAll('.sp-envelope').length`)
+  check('礼物炸开后蹦出多封信', spEnvelopes >= 6, `实际 ${spEnvelopes} 封`)
+  const spHint = await evaluate(`document.getElementById('spEnvHint').classList.contains('sp-env-hint--show')`)
+  check('信封阶段有点击提示', spHint === true)
+
+  // 点第三封信：不管点中哪封，都从第一封开始读
+  await evaluate(`document.querySelectorAll('.sp-envelope')[2].dispatchEvent(new MouseEvent('click', { bubbles: true }))`)
+  await sleep(1200)
+  const spLetter = await evaluate(`({
+    show: document.getElementById('spLetter').classList.contains('sp-letter--show'),
+    title: document.getElementById('spLetterTitle').textContent,
+    count: document.getElementById('spLetterCount').textContent,
+    paragraphs: document.querySelectorAll('#spLetterBody .sp-letter-p').length,
+    badges: [...document.querySelectorAll('.sp-letter-badge')].map(e => e.textContent).join(' / ')
+  })`)
+  check('点开的信封开始朗读情书', spLetter.show && spLetter.paragraphs > 0, JSON.stringify(spLetter))
+  check('不管点哪封都从第一封读起', /^第一封 · /.test(spLetter.title) && /^第 1 封 \/ 共 \d+ 封$/.test(spLetter.count), `${spLetter.title} / ${spLetter.count}`)
+  check('告白信徽章包含 11月29日 与 2804', /11月29日/.test(spLetter.badges) && /2804/.test(spLetter.badges), spLetter.badges)
+  await shot('13-surprise-letter.png')
+
+  // 一封封读到压卷大情书，再进终场：时间线逐条亮起（含雪花间隔，整段约两分钟）
+  let spFinaleShown = false
+  let spGrandShot = false
+  for (let i = 0; i < 75; i++) {
+    await sleep(3000)
+    // 顺手抓一张压卷大情书的定格
+    if (!spGrandShot) {
+      const spGrand = await evaluate(`document.getElementById('spLetter').classList.contains('sp-letter--show') && document.getElementById('spLetterTitle').textContent.includes('大情书')`)
+      if (spGrand) {
+        await shot('13b-surprise-grand.png')
+        spGrandShot = true
+      }
+    }
+    spFinaleShown = await evaluate(`document.getElementById('spFinale').classList.contains('sp-finale--show')`)
+    if (spFinaleShown) break
+  }
+  const spFinale = await evaluate(`({
+    items: document.querySelectorAll('#spTimeline .sp-tl-item').length,
+    text: document.getElementById('spTimeline').textContent,
+    wish: document.querySelector('.sp-finale-wish')?.textContent || '',
+    letterGone: !document.getElementById('spLetter').classList.contains('sp-letter--show'),
+    scene: !!document.querySelector('#spFinale .sp-scene'),
+    family: !!document.querySelector('#spFinale .sp-scene-family'),
+    prints: document.querySelectorAll('#spFinale .sp-print').length
+  })`)
+  check('情书读罢进入终场', spFinaleShown === true)
+  check('时间线 7 个里程碑全部亮起', spFinale.items === 7, `实际 ${spFinale.items}`)
+  check('时间线包含相识/相恋/订婚/领证/结婚/生闺女', ['相识', '相遇', '相恋', '订婚', '领证', '结婚', '我们的闺女出生'].every(k => spFinale.text.includes(k)), spFinale.text.replace(/\s+/g, ' '))
+  check('终场生日祝福语就位', /生日快乐/.test(spFinale.wish), spFinale.wish)
+  check('终场时情书已退场', spFinale.letterGone === true)
+  check('终场雪景：一家三口背影 + 一排脚印', spFinale.scene && spFinale.family && spFinale.prints >= 6, `prints=${spFinale.prints}`)
+  await shot('14-surprise-finale.png')
+
+  await evaluate(`document.getElementById('backBtn').click()`)
+  await sleep(500)
+  const spThemeOff = await evaluate(`!document.body.classList.contains('theme-surprise')`)
+  check('返回主页后惊喜主题已移除', spThemeOff === true)
+
+  // ========== 16. 全程无异常 ==========
   check('全程无未捕获异常', exceptions.length === 0, exceptions.join(' || '))
   check('全程无 console.error', consoleErrors.length === 0, consoleErrors.join(' || '))
 } catch (err) {

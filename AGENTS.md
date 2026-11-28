@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Browser mini-game collection (currently: Greedy Snake, 游龙52式, 2048, 扫雷, 翻牌配对, 打砖块) — TypeScript + webpack, no backend, no framework. DOM manipulation via `document.querySelector` and `offsetLeft/offsetTop`.
+Browser mini-game collection (currently: 惊喜点点, Greedy Snake, 游龙52式, 2048, 扫雷, 翻牌配对, 打砖块) — TypeScript + webpack, no backend, no framework. DOM manipulation via `document.querySelector` and `offsetLeft/offsetTop`.
 
 ## Quick Start
 
@@ -71,6 +71,11 @@ Every game builds on these instead of re-implementing timers, input, audio and p
 | `src/games/breakout/logic.ts` | 打砖块 level + brick-layout logic as pure functions |
 | `src/games/breakout/Breakout.ts` | 打砖块 controller: canvas rendering, matter.js bodies, scoring, high score |
 | `src/games/breakout/style.less` | 打砖块 styles (imported by the module, neon-blue theme) |
+| `src/games/surprise/index.ts` | 惊喜点点 game module: birthday surprise entry, declares `special: true` + `theme: 'surprise'` |
+| `src/games/surprise/lines.ts` | 惊喜点点 password check / random rounds / playful lines + confession text as pure functions |
+| `src/games/surprise/Surprise.ts` | 惊喜点点 controller: password gate, button chase, typewriter confession, particle FX |
+| `src/games/surprise/template.ts` | 惊喜点点 HTML template (birthday stage: cake, balloons, stars, letter) |
+| `src/games/surprise/style.less` | 惊喜点点 styles (imported by the module, pink-night theme) |
 | `src/ui/cardFace.ts` | Shared card primitives — the single definition of suits and ranks, used by 游龙52式 and 翻牌配对 |
 
 Four classes in `src/moduls/` (note: directory is misspelled as "moduls"):
@@ -137,6 +142,8 @@ export class Game {
 - **Turn-based games do not need a game loop**: only games with continuous motion start a `GameLoop`. The smoke test measures timer leaks against a per-mount baseline, not an absolute count. A timed board game (扫雷) uses the loop purely as a stopwatch — the loop's tab-hide auto-pause then pauses the clock for free.
 - **A game that loads a library asynchronously** shows `createLoading()` in its container, resolves the library inside `import()`, and disposes the instance if the user navigated away before it resolved. `matter-js` (打砖块) is the reference implementation — it lands in its own 81 KiB chunk and never enters the main bundle.
 - **Canvas games**: size the backing store for the device pixel ratio (`canvas.width = cssWidth * dpr`) and scale the context with `ctx.setTransform(scale, 0, 0, scale, 0, 0)` so all drawing uses logical coordinates.
+- **Special home entry**: a module with `special: true` renders as a flashy rainbow card (`.game-card--special` + `.card-ribbon`) in `App.renderGameList`. 惊喜点点 uses it and is pinned to the top of the registry.
+- **惊喜点点 flow**: correct password `么么儿` → candles blow out + confetti → chase button teleports to random percentage positions with playful lines (3–10 rounds, `rollRounds`) → final click drops a gift box, it bursts and envelopes pop out → click any envelope (or auto-pick after 6s) to read the love letters **from the first one onward** regardless of which was clicked, with a snow-flurry pause between letters → then the grand love letter (`BIG_LETTER`, `sp-letter--grand` gold styling) → finale reveals the milestone timeline (相识 2019.3.18 → 相遇 3.24 → 相恋 3.28 → 订婚 2025 正月初三 → 领证 2025.3.18 → 结婚 2025 四月初六 → 闺女出生 2025 七月二十三), a snow-scene SVG (moon, firs, snow mound, a family-of-three silhouette holding hands with a trail of footprints, all hand-drawn SVG primitives — no image assets) and the birthday wish (11月29日, 2804 days). Background music is an original 8-bar WebAudio lullaby loop (`BGM_LEAD`/`BGM_PAD` in `Surprise.ts`) on its own AudioContext with a toggle button (`gs:surprise.bgm` persisted) — it starts on the first in-stage gesture, fades out on stop, and is fully torn down in `destroy()`. The stage has persistent CSS snow (she likes snow). Wrong password → shake + a taunting button that refreshes forever; a small "重新输入口令" link is the only way back. All `setTimeout`s are registered through a `timers` set and cleared in `destroy()` — the smoke test asserts zero leaks.
 
 ## Toolchain
 
@@ -157,6 +164,7 @@ export class Game {
 - `test/games-minesweeper.test.ts` — unit tests for the 扫雷 board rules (mine count, first-click safety, flood-fill reveal, flagging, win check)
 - `test/games-memory.test.ts` — unit tests for the 翻牌配对 deck rules (card count, each face appears exactly twice, matching)
 - `test/games-breakout.test.ts` — unit tests for the 打砖块 level rules (brick count, layout inside the field, row scoring, paddle clamping)
+- `test/games-surprise.test.ts` — unit tests for the 惊喜点点 rules (password check, rounds within 3–10, line picking) and the full password → chase → confession flow under fake timers
 - `test/smoke.test.ts` — mounts **every** game in the registry twice, asserting no exception and **no timers left behind** after `destroy()` (fake timers + `vi.getTimerCount()` compared against a per-mount baseline)
 - `scripts/e2e.mjs` — zero-dependency CDP script driving headless Chromium over `dist/`: routing, deep links, browser back, theme switching, score persistence, 2048 tile alignment, and a clean console
 

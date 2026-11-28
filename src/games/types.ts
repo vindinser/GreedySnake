@@ -24,6 +24,8 @@ export interface GameModule {
   tags?: string[];
   // 主题名：挂载时外壳会给 body 加 theme-<theme>，退出时移除
   theme?: string;
+  // 特殊入口：主页用花里胡哨的卡片样式单独渲染（惊喜入口专用）
+  special?: boolean;
   // 挂载游戏到容器，返回游戏实例
   mount(container: HTMLElement): GameInstance;
 }
