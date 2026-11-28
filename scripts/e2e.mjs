@@ -80,7 +80,9 @@ function send(method, params = {}) {
 async function evaluate(expression) {
   const r = await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true })
   if (r.result?.exceptionDetails) {
-    throw new Error('页面脚本异常: ' + JSON.stringify(r.result.exceptionDetails.exception?.description || r.result.exceptionDetails))
+    const desc = r.result.exceptionDetails.exception?.description || JSON.stringify(r.result.exceptionDetails)
+    const snippet = expression.replace(/\s+/g, ' ').slice(0, 120)
+    throw new Error(`页面脚本异常: ${desc}\n    表达式: ${snippet}`)
   }
   return r.result?.result?.value
 }
@@ -114,9 +116,9 @@ try {
 
   // ========== 1. 主页 ==========
   const cardCount = await evaluate(`document.querySelectorAll('.game-card').length`)
-  check('主页渲染出 5 张游戏卡片', cardCount === 5, `实际 ${cardCount}`)
+  check('主页渲染出 6 张游戏卡片', cardCount === 6, `实际 ${cardCount}`)
   const cardNames = await evaluate(`[...document.querySelectorAll('.card-name')].map(e => e.textContent).join('|')`)
-  check('卡片包含五款游戏', cardNames === '贪吃蛇|游龙52式|2048|扫雷|翻牌配对', cardNames)
+  check('卡片包含六款游戏', cardNames === '贪吃蛇|游龙52式|2048|扫雷|翻牌配对|打砖块', cardNames)
   const homeHash = await evaluate(`window.location.hash`)
   check('初始路由为空（视作主页）', homeHash === '', `hash=${homeHash}`)
   await shot('01-home.png')
@@ -396,7 +398,88 @@ try {
   const mmThemeOff = await evaluate(`!document.body.classList.contains('theme-memory')`)
   check('返回主页后记忆翻牌主题已移除', mmThemeOff === true)
 
-  // ========== 14. 全程无异常 ==========
+  // ========== 14. 打砖块 ==========
+  await evaluate(`window.location.hash = '#/breakout'`)
+  // 物理引擎是按需 chunk，要等它加载完
+  let bkMounted = false
+  for (let i = 0; i < 40; i++) {
+    await sleep(150)
+    bkMounted = await evaluate(`!!document.querySelector('#gameContent #canvas')`)
+    if (bkMounted) break
+  }
+  check('打砖块挂载成功（物理引擎按需加载完成）', bkMounted === true)
+  const bkTheme = await evaluate(`document.body.classList.contains('theme-breakout')`)
+  check('打砖块应用 theme-breakout 主题', bkTheme === true)
+  const canvasSize = await evaluate(`(() => {
+    const c = document.getElementById('canvas')
+    return c ? c.width + 'x' + c.height : 'none'
+  })()`)
+  check('画布已按 DPR 分配尺寸', canvasSize !== 'none' && !canvasSize.startsWith('0'), canvasSize)
+
+  // 采样画布内容：在 rAF 回调里取，游戏的渲染先于它执行
+  const canvasSignature = `new Promise(resolve => {
+    requestAnimationFrame(() => {
+      const c = document.getElementById('canvas')
+      if (!c) { resolve({ h: 0, colors: 0 }); return }
+      const ctx = c.getContext('2d')
+      const d = ctx.getImageData(0, 0, c.width, c.height).data
+      let h = 0
+      const colors = new Set()
+      for (let i = 0; i < d.length; i += 41 * 4) {
+        colors.add(d[i] + ',' + d[i+1] + ',' + d[i+2])
+        h = (h * 31 + d[i] + d[i+1] * 3 + d[i+2] * 7) >>> 0
+      }
+      resolve({ h, colors: colors.size })
+    })
+  })`
+  const painted = await evaluate(canvasSignature)
+  check('画布已绘制内容（砖块着色）', painted.colors > 3, `颜色数 ${painted.colors}`)
+
+  // 检查关键颜色是否真的出现在画面上：砖块色板、挡板色、球色
+  const palette = await evaluate(`new Promise(resolve => {
+    requestAnimationFrame(() => {
+      const c = document.getElementById('canvas')
+      const ctx = c.getContext('2d')
+      const d = ctx.getImageData(0, 0, c.width, c.height).data
+      const counts = {}
+      for (let i = 0; i < d.length; i += 4) {
+        const key = d[i] + ',' + d[i+1] + ',' + d[i+2]
+        counts[key] = (counts[key] || 0) + 1
+      }
+      const has = (r, g, b) => (counts[r + ',' + g + ',' + b] || 0) > 50
+      resolve({
+        brickRed: has(255, 107, 107),
+        brickOrange: has(255, 169, 77),
+        brickGreen: has(105, 219, 124),
+        paddle: has(77, 171, 247),
+        ball: has(255, 212, 59)
+      })
+    })
+  })`)
+  check('砖块色板已上屏（红/橙/绿）', palette.brickRed && palette.brickOrange && palette.brickGreen, JSON.stringify(palette))
+  check('挡板与球已上屏', palette.paddle && palette.ball, JSON.stringify(palette))
+
+  // 发球：点一下画面，球应当开始运动
+  await evaluate(`(() => {
+    const c = document.getElementById('canvas')
+    const r = c.getBoundingClientRect()
+    c.dispatchEvent(new PointerEvent('pointerdown', {
+      clientX: r.left + r.width / 2, clientY: r.top + r.height / 2, bubbles: true
+    }))
+  })()`)
+  await sleep(250)
+  const sigA = await evaluate(canvasSignature)
+  await sleep(400)
+  const sigB = await evaluate(canvasSignature)
+  check('发球后球在运动（画面持续变化）', sigA.h !== sigB.h, `h ${sigA.h} vs ${sigB.h}`)
+  await shot('08-breakout.png')
+
+  await evaluate(`document.getElementById('backBtn').click()`)
+  await sleep(500)
+  const bkThemeOff = await evaluate(`!document.body.classList.contains('theme-breakout')`)
+  check('返回主页后打砖块主题已移除', bkThemeOff === true)
+
+  // ========== 15. 全程无异常 ==========
   check('全程无未捕获异常', exceptions.length === 0, exceptions.join(' || '))
   check('全程无 console.error', consoleErrors.length === 0, consoleErrors.join(' || '))
 } catch (err) {

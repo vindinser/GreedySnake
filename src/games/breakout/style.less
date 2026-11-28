@@ -1,0 +1,153 @@
+// 打砖块：主题与画面样式
+
+// ===== 主题（深蓝霓虹） =====
+// 主题类由外壳在挂载时加挂 body.theme-breakout，退出时移除
+body.theme-breakout {
+  --gs-accent: #4dabf7;
+  --gs-accent-dark: #2b7fc4;
+  --gs-accent-soft: rgba(77, 171, 247, 0.5);
+  --gs-surface: #16283c;
+  --gs-border: #3d5f80;
+  --gs-text: #dceaf7;
+  --gs-text-dim: #8aa4bd;
+
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(77, 171, 247, 0.1) 0%, transparent 60%),
+    linear-gradient(135deg, #0a1119 0%, #142436 50%, #1c3a56 100%);
+
+  .game-bar {
+    background: linear-gradient(180deg, #4a7ba8 0%, #2a4d70 100%);
+    border-color: #6699c4;
+  }
+
+  .back-btn {
+    color: #0d1b28;
+    background: linear-gradient(180deg, #d5e9fb 0%, #9cc6ea 100%);
+    border-color: #c4e0f7;
+  }
+
+  .game-bar-title {
+    color: #fff;
+    text-shadow: 0 0 10px rgba(77, 171, 247, 0.6);
+  }
+}
+
+// ===== 面板 =====
+.bk {
+  position: relative;
+  width: 428px;
+  max-width: 100%;
+  padding: 14px;
+  background: linear-gradient(180deg, #1a2c3e 0%, #101c29 100%);
+  border: 2px solid #3a5a79;
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 3px rgba(0, 0, 0, 0.5),
+    0 16px 40px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  user-select: none;
+}
+
+// ===== 顶部 =====
+.bk-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.bk-title {
+  font-size: 26px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  line-height: 1.1;
+  color: #8fd0ff;
+  text-shadow:
+    0 0 12px rgba(77, 171, 247, 0.5),
+    0 0 28px rgba(77, 171, 247, 0.25);
+}
+
+.bk-sub {
+  margin-top: 3px;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: #7d9bb8;
+}
+
+.bk-hud {
+  padding-top: 2px;
+
+  .gs-hud {
+    gap: 12px;
+  }
+
+  .gs-hud-cell {
+    font-size: 11px;
+  }
+
+  .gs-hud-value {
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 10px rgba(77, 171, 247, 0.45);
+  }
+}
+
+// ===== 画面 =====
+.bk-stage {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 0 2px rgba(77, 171, 247, 0.28),
+    0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+.bk-stage canvas {
+  display: block;
+  width: 100%;
+  // 高度由脚本按逻辑宽高比设置
+}
+
+// ===== 提示 =====
+.bk-hint {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #7d9bb8;
+}
+
+// ===== 结算覆盖层 =====
+.bk-over {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 26px 22px;
+  text-align: center;
+}
+
+.bk-over-title {
+  font-size: 24px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  color: #8fd0ff;
+  text-shadow: 0 0 14px rgba(77, 171, 247, 0.55);
+}
+
+.bk-over-desc {
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: #a8c0d6;
+}
+
+// ===== 窄屏适配 =====
+@media (max-width: 480px) {
+  .bk {
+    padding: 10px;
+  }
+
+  .bk-title {
+    font-size: 20px;
+  }
+}

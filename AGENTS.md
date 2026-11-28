@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Browser mini-game collection (currently: Greedy Snake, 游龙52式, 2048, 扫雷, 翻牌配对) — TypeScript + webpack, no backend, no framework. DOM manipulation via `document.querySelector` and `offsetLeft/offsetTop`.
+Browser mini-game collection (currently: Greedy Snake, 游龙52式, 2048, 扫雷, 翻牌配对, 打砖块) — TypeScript + webpack, no backend, no framework. DOM manipulation via `document.querySelector` and `offsetLeft/offsetTop`.
 
 ## Quick Start
 
@@ -66,6 +66,11 @@ Every game builds on these instead of re-implementing timers, input, audio and p
 | `src/games/memory/logic.ts` | 翻牌配对 deck + matching rules as pure functions |
 | `src/games/memory/Memory.ts` | 翻牌配对 controller: rendering, flip animation, move counting, high scores |
 | `src/games/memory/style.less` | 翻牌配对 styles (imported by the module, green-felt theme, 3D flip) |
+| `src/games/breakout/index.ts` | 打砖块 game module: async mount with a loading placeholder, declares `theme: 'breakout'` |
+| `src/games/breakout/runtime.ts` | The dynamic-`import()` boundary for `matter-js` — the only place the physics engine is referenced |
+| `src/games/breakout/logic.ts` | 打砖块 level + brick-layout logic as pure functions |
+| `src/games/breakout/Breakout.ts` | 打砖块 controller: canvas rendering, matter.js bodies, scoring, high score |
+| `src/games/breakout/style.less` | 打砖块 styles (imported by the module, neon-blue theme) |
 | `src/ui/cardFace.ts` | Shared card primitives — the single definition of suits and ranks, used by 游龙52式 and 翻牌配对 |
 
 Four classes in `src/moduls/` (note: directory is misspelled as "moduls"):
@@ -130,6 +135,8 @@ export class Game {
 - **Shared data belongs in `src/ui/`**: suits and ranks live once in `src/ui/cardFace.ts`; 游龙52式 imports them and adds its own task tables on top, 翻牌配对 renders them via `createCardFace()`. Never duplicate the suit definitions in a second game.
 - **3D flip cards**: the *back* of the card faces the viewer at rest (`transform: none`) and the *face* is pre-rotated `rotateY(180deg)`; flipping rotates the inner wrapper. Get this backwards and the game starts with every card face-up — the class names still look right, so verify with a hit test (`document.elementFromPoint`) rather than by reading the DOM classes.
 - **Turn-based games do not need a game loop**: only games with continuous motion start a `GameLoop`. The smoke test measures timer leaks against a per-mount baseline, not an absolute count. A timed board game (扫雷) uses the loop purely as a stopwatch — the loop's tab-hide auto-pause then pauses the clock for free.
+- **A game that loads a library asynchronously** shows `createLoading()` in its container, resolves the library inside `import()`, and disposes the instance if the user navigated away before it resolved. `matter-js` (打砖块) is the reference implementation — it lands in its own 81 KiB chunk and never enters the main bundle.
+- **Canvas games**: size the backing store for the device pixel ratio (`canvas.width = cssWidth * dpr`) and scale the context with `ctx.setTransform(scale, 0, 0, scale, 0, 0)` so all drawing uses logical coordinates.
 
 ## Toolchain
 
@@ -149,6 +156,7 @@ export class Game {
 - `test/games-2048.test.ts` — unit tests for the 2048 board rules (merge, one-merge-per-line, no mutation of the input board, dead-board detection)
 - `test/games-minesweeper.test.ts` — unit tests for the 扫雷 board rules (mine count, first-click safety, flood-fill reveal, flagging, win check)
 - `test/games-memory.test.ts` — unit tests for the 翻牌配对 deck rules (card count, each face appears exactly twice, matching)
+- `test/games-breakout.test.ts` — unit tests for the 打砖块 level rules (brick count, layout inside the field, row scoring, paddle clamping)
 - `test/smoke.test.ts` — mounts **every** game in the registry twice, asserting no exception and **no timers left behind** after `destroy()` (fake timers + `vi.getTimerCount()` compared against a per-mount baseline)
 - `scripts/e2e.mjs` — zero-dependency CDP script driving headless Chromium over `dist/`: routing, deep links, browser back, theme switching, score persistence, 2048 tile alignment, and a clean console
 
